@@ -32,16 +32,18 @@ class FitnessEvaluatorZ():
         return self._fitness(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)
                                           
     def convert_Z_to_raw(self, array):
+        # note that we are representing as A, X, B to get symmetry between A & B
         A = self._reverse_dict[array[0]]
-        B = self._reverse_dict[array[1]]
-        X = 0 if not array[2] else len(self._Z_dict) - 1
+        B = self._reverse_dict[array[2]]
+        X = 0 if not array[1] else len(self._Z_dict) - 1
         return (A, B, X)
     
     def convert_raw_to_Z(self, array):
+        # note that we are representing as A, X, B to get symmetry between A & B
         A = self._Z_dict[array[0]]
-        B = self._Z_dict[array[1]]
+        B = self._Z_dict[array[2]]
         cutoff_idx = len(self._Z_dict) / 2
-        X = True if array[2] >= cutoff_idx else False
+        X = True if array[1] >= cutoff_idx else False
         return (A, B, X)
 
 '''
