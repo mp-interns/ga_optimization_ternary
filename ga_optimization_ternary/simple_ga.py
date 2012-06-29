@@ -4,6 +4,7 @@ from __future__ import division
 '''
 Created on Mar 14, 2012
 '''
+from pyevolve.Mutators import G1DListMutatorIntegerRange
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -24,6 +25,7 @@ import numpy as np
 
 # This function is the evaluation function, we want
 # to give high score to more zero'ed chromosomes
+ALL_FOUND = False
 
 class StatTrack():
     
@@ -47,9 +49,17 @@ class StatTrack():
             
         self.generation_ncandidates.append(len(self._candidates_tried))
         self.generation_ngood.append(len(self._candidates_good))
+        if len(self._candidates_good) == len(self._good_candidates):
+            AllFound.ALL_FOUND = True
+            
+        return self.generation_ncandidates[-1] - self.generation_ncandidates[-2]
         
     def evolve_callback(self, ga):
-        self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
+        cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
+        if cands_added < 10:
+            ga.setMutationRate(0.75)
+        else:
+            ga.setMutationRate(0.02)
     
     def get_interpolation_function(self):
         return interp1d(self.generation_ncandidates, self.generation_ngood)
@@ -65,6 +75,7 @@ def run_main(fe, popsize, gens):
     # Sets the range max and min of the 1D List
     genome.setParams(rangemin=0, rangemax=51)
     genome.crossover.set(Crossovers.G1DListCrossoverUniform)
+    genome.mutator.set(G1DListMutatorIntegerRange)
 
     # The evaluator function (evaluation function)
     genome.evaluator.set(fe.array_to_score)
@@ -75,39 +86,46 @@ def run_main(fe, popsize, gens):
     # Set the Roulette Wheel selector method, the number of generations and
     # the termination criteria
     ga.selector.set(Selectors.GTournamentSelector)
-    ga.terminationCriteria.set(GSimpleGA.ConvergenceCriteria)
-    
+    ga.terminationCriteria.set(AllFoundCriteria)
     ga.stepCallback.set(st.evolve_callback)
     ga.setPopulationSize(popsize)
     ga.setGenerations(gens)
-    
     ga.evolve()
     
     return st
         
-def iteration_test(fe, iterations = 20, popsize = 500, gens = 200):
+def iteration_test(fe, iterations = 20, popsize = 500, gens = 500):
     statslist = []
     
     min_candidates = 10000000
     
     for i in range(iterations):
+        AllFound.ALL_FOUND=False
         stat=run_main(fe, popsize, gens)
         
         my_hit_rate = stat.generation_ngood[-1]/float(stat.generation_ncandidates[-1])
-        usual_hit_rate = len(stat._good_candidates)/5704  # 5704 is total number of calcs in DB
+        usual_hit_rate = len(stat._good_candidates)/5408  # 5408 is total number of calcs in DB
         print stat.generation_ncandidates[-1], stat.generation_ngood[-1], (my_hit_rate)/(usual_hit_rate)
         statslist.append(stat.get_interpolation_function())
         if stat.generation_ncandidates[-1] < min_candidates:
             min_candidates = stat.generation_ncandidates[-1]
-    
         
     print '----'
     
     for i in range(min_candidates):
         values = [stats(i) for stats in statslist]
         print i,'\t', float(sum(values))/len(values)
-            
-            
+
+
+class AllFound():
+    ALL_FOUND = False
+                
+def AllFoundCriteria(ga_engine):
+    """ Terminate the evolution based on the raw stats
+    """
+    return AllFound.ALL_FOUND
+    
     
 if __name__ == "__main__":
     iteration_test(FitnessEvaluatorZ())
+    
