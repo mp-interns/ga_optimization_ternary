@@ -7,6 +7,7 @@ Created on Mar 14, 2012
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple,\
     eval_fitness_complex, eval_fitness_partial
 from test.test_descrtut import defaultdict
+from collections import OrderedDict
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -45,7 +46,7 @@ class ParameterSet():
         self.niching_bool = niching_bool
     
     def to_dict(self):
-        d = {}
+        d = OrderedDict()
         d['crossover_fnc'] = self.crossover_fnc.__name__
         d['fitness_fnc'] = self.fitness_fnc.__name__
         d['selection_fnc'] = self.selection_fnc.__name__
@@ -55,6 +56,9 @@ class ParameterSet():
         d['elitism_num'] = self.elitism_num
         d['niching'] = self.niching_bool
         return d
+    
+    def unique_key(self):
+        return '-'.join([str(val) for val in self.to_dict().values()])
 
 
 class StatTrack():
@@ -181,7 +185,7 @@ def main_loop():
                                     AllFound.ALL_FOUND = False  # reset the simulation
                                     ps = ParameterSet(crossover_fnc, fitness_fnc, selection_fnc, mutator_fnc, initialization_fnc, popsize, elitism, niching)  # set up the parameters
                                     stats = run_simulation(ps, max_generations)
-                                    print stats.generation_ncandidates[-1], ps.to_dict()
+                                    print stats.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
                                     
     
     
