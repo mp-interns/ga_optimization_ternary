@@ -84,28 +84,31 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         #print gap_dir, gap_ind, heat_of_formation, (max(gaussian_pdf(gap_dir, 2.25), gaussian_pdf(gap_ind, 2.25)) * 2.5), 1-1/(1+math.exp(-heat_of_formation)), score
         return score_1 * score_2
 
+
 def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
-        score_1 = 0
+        score = 0
         
         if (gap_dir >= 1.5 and gap_dir <= 3) or (gap_ind >= 1.5 and gap_ind <= 3):
-            score_1 = 10
+            score += 10
         
-        score_2 = 10 + 0.2 - heat_of_formation
+        score += 10 + 0.2 - heat_of_formation
         
-        score_3 = 0
-        # print gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind
-        '''
-        if (vb_dir > 5.73 or vb_ind > 5.73):
-            score_3 += 2.5
-        
-        if (cb_dir < 4.5 or cb_ind < 4.5:
-            score_3 += 2.5
-        '''
         if (vb_dir > 5.73 and cb_dir < 4.5) or (vb_ind > 5.73 and cb_ind < 4.5):
-            score_3 += 10
+            score += 10
         
-        #print gap_dir, gap_ind, heat_of_formation, (max(gaussian_pdf(gap_dir, 2.25), gaussian_pdf(gap_ind, 2.25)) * 2.5), 1-1/(1+math.exp(-heat_of_formation)), score
-        return score_1 + score_2 + score_3
+        return score
+
+
+def eval_fitness_partial(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
+        score = eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind)
+        
+        if (vb_dir > 5.73 or vb_ind > 5.73):
+            score += 2.5
+        
+        if (cb_dir < 4.5 or cb_ind < 4.5):
+            score += 2.5
+        
+        return score
 
 def gaussian_pdf(x, mean=0):
     return (1/math.sqrt(2*math.pi))*math.exp(-0.5*(x-mean)*(x-mean))
@@ -122,11 +125,3 @@ if __name__ == "__main__":
     print [i for i in fe.convert_Z_to_raw((12, 73, True))]
     print [i for i in fe.convert_Z_to_raw((12, 73, True))]
     #print gaussian_pdf(1)
-    '''
-12 73
-20 73
-38 73
-56 73
-57 22
-82 73
-    '''

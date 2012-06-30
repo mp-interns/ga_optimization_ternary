@@ -7,3 +7,4 @@ _build
 build
 .project
 .pydevproject
+ga_optimization_ternary/fitness_evaluators.pyc
