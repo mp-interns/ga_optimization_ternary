@@ -21,6 +21,7 @@ from pyevolve import GSimpleGA
 from pyevolve import Selectors
 from pyevolve import Statistics, Crossovers
 from fitness_evaluators import FitnessEvaluatorZ
+from database import Stats_Database
 
 from scipy.interpolate import interp1d
 
@@ -97,32 +98,6 @@ class StatTrack():
     
     def get_interpolation_function(self):
         return interp1d(self.generation_ncandidates, self.generation_ngood)
-    
-    
-
-"""    
-def iteration_test(fe, iterations = 20, popsize = 500, gens = 500):
-    statslist = []
-    
-    min_candidates = 10000000
-    
-    for i in range(iterations):
-        
-        stat=run_main(fe, popsize, gens)
-        
-        my_hit_rate = stat.generation_ngood[-1]/float(stat.generation_ncandidates[-1])
-        usual_hit_rate = len(stat._good_candidates)/5408  # 5408 is total number of calcs in DB
-        print stat.generation_ncandidates[-1], stat.generation_ngood[-1], (my_hit_rate)/(usual_hit_rate)
-        statslist.append(stat.get_interpolation_function())
-        if stat.generation_ncandidates[-1] < min_candidates:
-            min_candidates = stat.generation_ncandidates[-1]
-        
-    print '----'
-    
-    for i in range(min_candidates):
-        values = [stats(i) for stats in statslist]
-        print i,'\t', float(sum(values))/len(values)
-"""
 
 
 def run_simulation(pset, max_generations):
@@ -163,8 +138,8 @@ def run_simulation(pset, max_generations):
 
 def main_loop():
     max_generations = 10000  # should always work...(hopefully)
-    num_iterations = 100
-    
+    num_iterations = 50
+    db = Stats_Database(clear=True)
     popsizes = [125, 250, 500, 1000]
     fitness_fncs = [eval_fitness_simple, eval_fitness_partial]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]  # TODO: is Single point different than 2 point?
@@ -182,10 +157,15 @@ def main_loop():
                         for elitism in elitisms:
                             for niching in nichings:
                                 for initialization_fnc in initialization_fncs:
-                                    AllFound.ALL_FOUND = False  # reset the simulation
-                                    ps = ParameterSet(crossover_fnc, fitness_fnc, selection_fnc, mutator_fnc, initialization_fnc, popsize, elitism, niching)  # set up the parameters
-                                    stats = run_simulation(ps, max_generations)
-                                    print stats.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
+                                    stats = []
+                                    for iteration in range(num_iterations):
+                                        AllFound.ALL_FOUND = False  # reset the simulation
+                                        ps = ParameterSet(crossover_fnc, fitness_fnc, selection_fnc, mutator_fnc, initialization_fnc, popsize, elitism, niching)  # set up the parameters
+                                        stat = run_simulation(ps, max_generations)
+                                        print stat.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
+                                        stats.append(stat)
+                                    db.add_stats_raw(ps, stats)
+                                    
                                     
     
     
