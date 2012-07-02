@@ -17,8 +17,7 @@ import pymongo
 from collections import defaultdict
 from pymatgen.core.periodic_table import Element
 from scipy.interpolate import interp1d
-
-import fitness_evaluators
+import numpy as np
 
 MAX_GOOD = 15
 MAX_CAND = 5408
@@ -62,66 +61,40 @@ class Stats_Database():
         self._stats_raw.insert(doc)
     
     def process_stats(self):
-        # THIS CODE IS ALL UGLY AND NON PYTHONIC. IT's LATE.
         
         for expt in self._stats_raw.find():
-            doc = {}
+            
             # remove any previous document
             self._stats_process.remove({"unique_key": expt['unique_key']})
-        
-            my_big_array = []  # each idx is one iteration. The val is an ngood array
-            my_final_array = []
             
+            # initalize doc
+            doc = {}
             doc['parameters'] = expt['parameters']
             doc['unique_key'] = expt['unique_key']
             
-            for it in expt['iterations']:
-                ngood = []  # index is n_candidates tried, val is n_candidates found
-                
-                x = [0]
-                y = [0]
-                for gen in it:
-                    if gen['n_good'] > y[-1]:
-                        x.append(gen['n_cand'])
-                        y.append(gen['n_good'])
-                
-                if not x[-1] == MAX_CAND: 
-                    x.append(MAX_CAND)
-                    y.append(MAX_GOOD)
-                f = interp1d(x, y)
-                for idx in range(MAX_CAND + 1):
-                    ngood.append(float(f(idx)))
-                
-                my_big_array.append(ngood)
+            # initialize data
+            num_iterations = len(expt['iterations'])
+            it_ng_nc = np.zeros((num_iterations, MAX_GOOD+1))  # [iteration, numgood] = (# candidates needed)
             
-            # my_big_array is initialized
-            # get the final_array
-            sum_array = []
-            num_iterations = len(my_big_array)
-            #not pythonic, who's looking
-            for cand_no, t in enumerate(my_big_array[0]):
-                m_sum = 0
-                for it_no, t in enumerate(my_big_array):
-                    m_sum += my_big_array[it_no][cand_no]
-                    #print m_sum, it_no
-                #print m_sum
-                sum_array.append(m_sum)
-                
-            final_array = [val / num_iterations for val in sum_array]
+            for it, dat in enumerate(expt['iterations']):
+                ng = 0  # number good that we're trying to initialize
+                for gen in dat:
+                    if gen['n_good'] >= ng:
+                        it_ng_nc[it][ng] = gen['n_cand']
+                        ng += 1
+                        
+            ng_it_nc = np.transpose(it_ng_nc)  # [numgood, iteration] = (# candidates needed)
             
-            doc['averaged_ngood'] = final_array
+            ng_avg =  [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
+            ng_stdev = [np.std(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] # [numgood] = (stdev # of candidates needed)
             
-            tries_needed = []
-            for idx in range(MAX_CAND + 1):
-                for tries, val in enumerate(final_array):
-                    if val >= idx:
-                        tries_needed.append(tries)
-                        break
+            doc['ng_it_nc'] = ng_it_nc.tolist()
+            doc['ng_avg'] = ng_avg
+            doc['ng_stdev'] = ng_stdev
+            doc['all'] = ng_avg[15]  # shorthand, avg number of candidates needed to get all good cands
+            doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
             
-            print tries_needed
-            doc['tries_needed'] = tries_needed
-            doc['all'] = tries_needed[MAX_GOOD]
-            doc['ten'] = tries_needed[10]
+            print doc
             self._stats_process.insert(doc)
                 
         
