@@ -79,7 +79,7 @@ class Stats_Database():
             for it, dat in enumerate(expt['iterations']):
                 ng = 0  # number good that we're trying to initialize
                 for gen in dat:
-                    if gen['n_good'] >= ng:
+                    while gen['n_good'] >= ng:
                         it_ng_nc[it][ng] = gen['n_cand']
                         ng += 1
                         
