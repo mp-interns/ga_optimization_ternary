@@ -87,10 +87,16 @@ class Stats_Database():
             
             ng_avg =  [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
             ng_stdev = [np.std(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] # [numgood] = (stdev # of candidates needed)
-            
+            ng_min = [np.min(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] 
+            ng_max = [np.max(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]
+            ng_range = [ng_max[idx] - ng_min[idx] for idx in range(len(ng_max))]
+
             doc['ng_it_nc'] = ng_it_nc.tolist()
             doc['ng_avg'] = ng_avg
             doc['ng_stdev'] = ng_stdev
+            doc['ng_min'] = ng_min
+            doc['ng_max'] = ng_max
+            doc['ng_range'] = ng_range
             doc['all'] = ng_avg[15]  # shorthand, avg number of candidates needed to get all good cands
             doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
             
