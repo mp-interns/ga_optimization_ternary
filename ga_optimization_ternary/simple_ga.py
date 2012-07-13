@@ -95,6 +95,18 @@ class StatTrack():
             ga.setMutationRate(0.75)
         else:
             ga.setMutationRate(0.02)
+            
+        if ga.currentGeneration == 0:
+            print 'YAY'
+            pop = ga.getPopulation()
+            for p in pop:
+                print p.__class__
+            # CHANGE THE ENTIRE POPULATION "pop"
+            #pop[i].genomeList = [random.random(), 0 for i in xrange(chromosome/2)]
+            #newPop.evaluate()
+            #newPop.sort()
+        return False
+        
     
     def get_interpolation_function(self):
         return interp1d(self.generation_ncandidates, self.generation_ngood)
@@ -142,7 +154,7 @@ def main_loop():
     db = Stats_Database(clear=True)
     popsizes = [125, 250, 500, 1000]
     fitness_fncs = [eval_fitness_simple, eval_fitness_partial]
-    crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]  # TODO: is Single point different than 2 point?
+    crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GTournamentSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]  # Rank selector is SLOW...
     mutator_fncs = [Mutators.G1DListMutatorIntegerRange]
     elitisms = [0, 1, 2, 5]
@@ -164,7 +176,7 @@ def main_loop():
                                         stat = run_simulation(ps, max_generations)
                                         print stat.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
                                         stats.append(stat)
-                                    db.add_stats_raw(ps, stats)
+                                    # db.add_stats_raw(ps, stats)
                                     
                                     
     
