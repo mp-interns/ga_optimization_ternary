@@ -149,9 +149,11 @@ def run_simulation(pset, max_generations):
     
 
 def main_loop():
+    production = False
     max_generations = 10000  # should always work...(hopefully)
     num_iterations = 50
-    db = Stats_Database(clear=True)
+    if production:
+        db = Stats_Database(clear=True)
     popsizes = [125, 250, 500, 1000]
     fitness_fncs = [eval_fitness_simple, eval_fitness_partial]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
@@ -176,7 +178,8 @@ def main_loop():
                                         stat = run_simulation(ps, max_generations)
                                         print stat.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
                                         stats.append(stat)
-                                    # db.add_stats_raw(ps, stats)
+                                    if production:
+                                        db.add_stats_raw(ps, stats)
                                     
                                     
     
