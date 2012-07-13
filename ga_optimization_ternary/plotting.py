@@ -21,15 +21,15 @@ import numpy as np
 
 class PerformancePlot():
 
-    def __init__(self):
+    def __init__(self, format=None):
         plt.figure(1, figsize=(8,6))
         self.db = Stats_Database()
         self.stats_process = self.db._stats_process
         num_exps = self.stats_process.count()
         
         self.lw = 4
-        self.fontsize = 16
-        self.fontname = "Gill Sans"
+        self.fontsize = 14
+        self.fontname = "Trebuchet MS"
         
         self.get_reference_data()  # reference
         self.get_data(0, "best GA", "blue")  # best
@@ -40,6 +40,10 @@ class PerformancePlot():
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.ylim((0, MAX_GOOD + 0.5))
+        
+        if format:
+            plt.savefig("performance_plot."+format)
+            
         
     def get_data(self, idx, label, color, crit="ten"):
         x = []
@@ -63,7 +67,7 @@ class PerformancePlot():
 
 class ComparisonPlot():
 
-    def __init__(self):
+    def __init__(self, format=None):
         plt.figure(2)
         self.db = Stats_Database()
         self.stats_process = self.db._stats_process
@@ -71,7 +75,7 @@ class ComparisonPlot():
         
         self.lw = 4
         self.fontsize = 16
-        self.fontname = "Gill Sans"
+        self.fontname = "Trebuchet MS"
         
         plt.xlabel("GA parameter set rank", fontname=self.fontname, fontsize=self.fontsize)
         plt.ylabel("Efficiency vs. random", fontname=self.fontname, fontsize=self.fontsize)
@@ -80,6 +84,8 @@ class ComparisonPlot():
         plt.xlim((0, self.num_exps))
         self.get_reference()
         self.get_data() 
+        if format:
+            plt.savefig("comparison_plot."+format)
     
     def get_data(self):
         x = []
@@ -110,11 +116,13 @@ class ComparisonPlot():
 
 class ParametersPlot():
 
-    def __init__(self):
+    def __init__(self, format=None):
         plt.figure(1, figsize=(16,8))
         self.db = Stats_Database()
         self.stats_process = self.db._stats_process
         self.num_exps = self.stats_process.count()
+        
+        self.fontname = "Trebuchet MS"
         
         params = ["crossover_fnc", "popsize", "selection_fnc", "elitism_num", "fitness_fnc", "initialization_fnc"]
         
@@ -123,9 +131,11 @@ class ParametersPlot():
             plt.subplot(2, 3, idx+1)
             self.get_data(param)
         
+        if format:
+            plt.savefig("parameters_plot."+format)
     
     def get_data(self, parameter):
-        plt.title(self.get_pretty_name(parameter))
+        plt.title(self.get_pretty_name(parameter), fontname=self.fontname)
         
         data = []
         labels = self.stats_process.distinct("parameters."+parameter)
@@ -139,7 +149,8 @@ class ParametersPlot():
         xlocations = np.array(range(len(data))) + 0.5
         width = 0.75
         plt.bar(xlocations, data, width=width)
-        plt.xticks(xlocations + width/2, pretty_labels)
+        plt.xticks(xlocations + width/2, pretty_labels, fontname=self.fontname)
+        plt.yticks(fontname=self.fontname)
         plt.xlim(0, xlocations[-1] + width * 2)
     
     def get_pretty_name(self, ugly_name):
@@ -181,7 +192,9 @@ class TenAllPlot():
         plt.scatter(x, y)
         
 if __name__ == "__main__":
-    ParametersPlot()
+    PerformancePlot(format="eps")
+    #ComparisonPlot(format="eps")
+    #ParametersPlot(format="eps")
     plt.show()
 
     
