@@ -33,10 +33,10 @@ class PerformancePlot():
         
         self.get_reference_data()  # reference
         self.get_data(0, "best GA", "blue")  # best
-        self.get_data(num_exps/2, "median GA", "red")  # ~medium
+        self.get_data(num_exps-1, "worst GA", "red", "right")  # ~worst
         
-        plt.xlabel("Candidates calculated", fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylabel("Matching materials found", fontname=self.fontname, fontsize=self.fontsize)
+        plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.ylim((0, MAX_GOOD + 0.5))
@@ -45,7 +45,7 @@ class PerformancePlot():
             plt.savefig("performance_plot."+format)
             
         
-    def get_data(self, idx, label, color, crit="ten"):
+    def get_data(self, idx, label, color, pos="left", crit="ten"):
         x = []
         y = []
         xerr = []
@@ -54,15 +54,19 @@ class PerformancePlot():
             y.append(idx)
             x.append(val)
             xerr.append(data['ng_stdev'][idx])
+        ha, va, xytext = "right", "bottom", (-5, 5)
         
+        if pos == "right":
+            ha, va, xytext = "left", "bottom", (15, 5)
+            
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
-        plt.annotate(label, xy = (x[(int)(MAX_GOOD*3/4)], y[(int)(MAX_GOOD*3/4)]), xytext = (-5, 5), color=color, textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate(label, xy = (x[(int)(MAX_GOOD*3/4)], y[(int)(MAX_GOOD*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference_data(self):
         x = [0, get_reference_array()[15]]
         y = [0, MAX_GOOD]
         plt.errorbar(x, y, lw=self.lw, color="black")
-        plt.annotate("random", xy = (x[1] * 0.66, y[1] * 0.66), xytext = (-15, -30), color="black", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate("random", xy = (x[1] * 0.75, y[1] * 0.75), xytext = (-5, 0), color="black", textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
 
 class ComparisonPlot():
