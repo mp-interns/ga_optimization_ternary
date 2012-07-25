@@ -97,6 +97,7 @@ class StatTrack():
             ga.setMutationRate(0.02)
             
         if ga.currentGeneration == 0:
+            '''
             print 'YAY'
             pop = ga.getPopulation()
             for p in pop:
@@ -105,6 +106,7 @@ class StatTrack():
             #pop[i].genomeList = [random.random(), 0 for i in xrange(chromosome/2)]
             #newPop.evaluate()
             #newPop.sort()
+            '''
         return False
         
     

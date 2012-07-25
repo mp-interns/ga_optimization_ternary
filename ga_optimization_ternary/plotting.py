@@ -6,6 +6,8 @@ Created on Jul 6, 2012
 '''
 from ga_optimization_ternary.database import M_Database, Stats_Database, MAX_CAND, MAX_GOOD
 from ga_optimization_ternary.utils import get_reference_array
+from ga_optimization_ternary import ranked_list_optimization
+from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -18,6 +20,25 @@ import matplotlib.pyplot as plt
 import pymongo
 from database import MAX_GOOD
 import numpy as np
+
+def get_pretty_name(ugly_name):
+    d = {}
+    d['crossover_fnc'] = "Crossover Function"
+    d['selection_fnc'] = "Selection Function"
+    d['fitness_fnc'] = "Fitness Function"
+    d['G1DListCrossoverSinglePoint'] = "Single Point"
+    d['G1DListCrossoverTwoPoint'] = "Two Point"
+    d['G1DListCrossoverUniform'] = "Uniform"
+    d['GRouletteWheel'] = "Roulette"
+    d['GTournamentSelector'] = "Tournament"
+    d['GUniformSelector'] = "Uniform"
+    d['eval_fitness_partial'] = "Partial"
+    d['eval_fitness_simple'] = "All-or-Nothing"
+    d['initialization_fnc'] = "Initialization Function"
+    d['G1DListInitializatorInteger'] = "Random"
+    d['popsize'] = "Population size"
+    d['elitism_num'] = "Number of Elite"
+    return d.get(ugly_name, ugly_name)
 
 class PerformancePlot():
 
@@ -32,6 +53,7 @@ class PerformancePlot():
         self.fontname = "Trebuchet MS"
         
         self.get_reference_data()  # reference
+        self.get_goldschmidt_data()  # goldschmidt reference
         self.get_data(0, "best GA", "blue")  # best
         self.get_data(num_exps-1, "worst GA", "red", "right")  # ~worst
         
@@ -43,7 +65,8 @@ class PerformancePlot():
         
         if format:
             plt.savefig("performance_plot."+format)
-            
+        else:
+            plt.show()
         
     def get_data(self, idx, label, color, pos="left", crit="ten"):
         x = []
@@ -61,6 +84,12 @@ class PerformancePlot():
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
         plt.annotate(label, xy = (x[(int)(MAX_GOOD*3/4)], y[(int)(MAX_GOOD*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+    
+    def get_goldschmidt_data(self):
+        color = [.996, .415, 0]
+        y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt())
+        plt.errorbar(x, y, lw=self.lw, color=color)
+        plt.annotate("goldschmidt", xy = (x[10], y[10]), xytext = (5, -15), color=color, textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference_data(self):
         x = [0, get_reference_array()[15]]
@@ -90,6 +119,8 @@ class ComparisonPlot():
         self.get_data() 
         if format:
             plt.savefig("comparison_plot."+format)
+        else:
+            plt.show()
     
     def get_data(self):
         x = []
@@ -137,9 +168,11 @@ class ParametersPlot():
         
         if format:
             plt.savefig("parameters_plot."+format)
+        else:
+            plt.show()
     
     def get_data(self, parameter):
-        plt.title(self.get_pretty_name(parameter), fontname=self.fontname)
+        plt.title(get_pretty_name(parameter), fontname=self.fontname)
         
         data = []
         labels = self.stats_process.distinct("parameters."+parameter)
@@ -149,32 +182,13 @@ class ParametersPlot():
             best = self.stats_process.find({"parameters."+parameter:label}, sort=[("ten",pymongo.ASCENDING)])[0]
             data.append(get_reference_array()[10]/best["ten"])
         
-        pretty_labels = [self.get_pretty_name(n) for n in labels]
+        pretty_labels = [get_pretty_name(n) for n in labels]
         xlocations = np.array(range(len(data))) + 0.5
         width = 0.75
         plt.bar(xlocations, data, width=width)
         plt.xticks(xlocations + width/2, pretty_labels, fontname=self.fontname)
         plt.yticks(fontname=self.fontname)
         plt.xlim(0, xlocations[-1] + width * 2)
-    
-    def get_pretty_name(self, ugly_name):
-        d = {}
-        d['crossover_fnc'] = "Crossover Function"
-        d['selection_fnc'] = "Selection Function"
-        d['fitness_fnc'] = "Fitness Function"
-        d['G1DListCrossoverSinglePoint'] = "Single Point"
-        d['G1DListCrossoverTwoPoint'] = "Two Point"
-        d['G1DListCrossoverUniform'] = "Uniform"
-        d['GRouletteWheel'] = "Roulette"
-        d['GTournamentSelector'] = "Tournament"
-        d['GUniformSelector'] = "Uniform"
-        d['eval_fitness_partial'] = "Partial"
-        d['eval_fitness_simple'] = "All-or-Nothing"
-        d['initialization_fnc'] = "Initialization Function"
-        d['G1DListInitializatorInteger'] = "Random"
-        d['popsize'] = "Population size"
-        d['elitism_num'] = "Number of Elite"
-        return d.get(ugly_name, ugly_name)
     
 class TenAllPlot():
 
@@ -194,13 +208,25 @@ class TenAllPlot():
             x.append(data['ten'])
             y.append(data['all'])
         plt.scatter(x, y)
+    
+class DataTable():
+    
+    def __init__(self):
+        self.db = Stats_Database()
+        self.stats_process = self.db._stats_process
         
+        for it in self.stats_process.find():
+            p = it['parameters']
+            
+            print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
+    
 if __name__ == "__main__":
-    PerformancePlot(format="eps")
+    PerformancePlot(format="png")
     #ComparisonPlot(format="eps")
     #ParametersPlot(format="eps")
-    plt.show()
-
+    #plt.show()
+    
+    # DataTable()
     
 """
 # example data

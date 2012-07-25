@@ -32,7 +32,7 @@ def _get_prob(k, M, n):
     for draws in range(k, M + 1):
         prob_dens = hypergeom.pmf(k, M, n, draws) * k/draws
         topsum += prob_dens * draws
-        bottomsum += prob_dens    
+        bottomsum += prob_dens
     
     print topsum/bottomsum
     return topsum/bottomsum
@@ -46,8 +46,8 @@ def _get_prob_bailey(JC, CC, JJ):
     print a
     
 if __name__ == "__main__":
-    _get_prob_bailey(1, 3, 1)
-    _get_prob(1, 3, 1)
+    _get_prob_bailey(3, 200, 6)
+    _get_prob(3, 200, 6)
     """
     a = []
     for i in range(0, MAX_GOOD):
