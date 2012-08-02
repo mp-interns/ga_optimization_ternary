@@ -15,7 +15,7 @@ from pymatgen.core.periodic_table import Element
 from database import M_Database
 import math
 
-class FitnessEvaluatorZ():
+class FitnessEvaluator():
     
     def __init__(self, fitness):
         
@@ -114,7 +114,7 @@ def gaussian_pdf(x, mean=0):
     
 
 if __name__ == "__main__":
-    fe = FitnessEvaluatorZ()
+    fe = FitnessEvaluator()
     #print fe.array_to_score((49,41,20))
     print [i for i in fe.convert_Z_to_raw((12, 1, 23))]
     #print gaussian_pdf(1)

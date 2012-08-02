@@ -21,7 +21,7 @@ from pyevolve import G1DList, Mutators, Initializators, GAllele
 from pyevolve import GSimpleGA
 from pyevolve import Selectors
 from pyevolve import Statistics, Crossovers
-from fitness_evaluators import FitnessEvaluatorZ
+from fitness_evaluators import FitnessEvaluator
 from database import Stats_Database
 
 from scipy.interpolate import interp1d
@@ -115,7 +115,6 @@ class StatTrack():
 
 
 def run_simulation(pset, max_generations):
-    
     # Genome instance
     setOfAlleles = GAllele.GAlleles()
     setOfAlleles.add(GAllele.GAlleleRange(0, 51))
@@ -127,7 +126,9 @@ def run_simulation(pset, max_generations):
     genome.setParams(allele=setOfAlleles)
     
     #Fitness function
-    fe = FitnessEvaluatorZ(pset.fitness_fnc)
+    
+    fe = FitnessEvaluator(pset.fitness_fnc)
+    
     st = StatTrack(fe)
     
     genome.crossover.set(pset.crossover_fnc)
@@ -149,7 +150,6 @@ def run_simulation(pset, max_generations):
         ga.setElitism(False)
     
     # TODO: figure out niching
-    
     ga.evolve()
     
     return st

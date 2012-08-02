@@ -3,7 +3,8 @@ from __future__ import division
 '''
 Created on Jul 23, 2012
 '''
-from ga_optimization_ternary.fitness_evaluators import FitnessEvaluatorZ
+from ga_optimization_ternary.fitness_evaluators import FitnessEvaluator,\
+    eval_fitness_simple
 from pymatgen.core.periodic_table import Element
 import math
 from ga_optimization_ternary.simple_ga import StatTrack
@@ -26,7 +27,7 @@ def get_ranked_list_goldschmidt():
         with open(filename) as f:
             return pickle.load(f)
     
-    all_AB = FitnessEvaluatorZ()._reverse_dict.keys()
+    all_AB = FitnessEvaluator(eval_fitness_simple)._reverse_dict.keys()
     print 'generating goldschmidt ranks...'
     cand_score = {}  # dictionary of cand_tuple:score. a high score is BAD
     for a in all_AB:
@@ -59,7 +60,7 @@ def get_ranked_list_goldschmidt_smart():
         with open(filename) as f:
             return pickle.load(f)
     
-    all_AB = FitnessEvaluatorZ()._reverse_dict.keys()
+    all_AB = FitnessEvaluator(eval_fitness_simple)._reverse_dict.keys()
     print 'generating goldschmidt ranks...'
     cand_score = {}  # dictionary of cand_tuple:score. a high score is BAD
     for a in all_AB:
