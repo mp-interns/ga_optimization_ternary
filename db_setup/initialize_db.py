@@ -39,7 +39,7 @@ def data_process_coll(remove=False):
 def init_db_raw():
     raw_coll = data_raw_coll(remove=True)
     
-    dirs = ["abo3", "abo2n"]
+    dirs = ["../data/abn3", "../data/abo2f", "../data/abo2n", "../data/abo2s", "../data/abo3", "../data/abofn", "../data/abon2"]
     for dir in dirs:
         for f in os.listdir(dir):
             if  '.json' in f:
@@ -69,7 +69,16 @@ def init_db_processed():
             s = Structure(latt, atomic_species, positions, True)
             out_dict['structure'] = s.to_dict
             
-            out_dict['contains_anion'] = True if out_dict['anion'].strip() == "O2N" else False
+            anion_dict = {}
+            anion_dict["O3"] = 0
+            anion_dict["O2N"] = 1
+            anion_dict["ON2"] = 2
+            anion_dict["N3"] = 3
+            anion_dict["O2F"] = 4
+            anion_dict["OFN"] = 5
+            anion_dict["O2S"] = 6
+            
+            out_dict['anion_idx'] = anion_dict[out_dict['anion']]
             out_dict['is_direct'] = True if out_dict['gllbsc_dir-gap'] == out_dict['gllbsc_ind-gap'] else False
             out_dict['sum_magnetic_moments'] = sum(entry['MagneticMoments'])
              
@@ -78,23 +87,6 @@ def init_db_processed():
             print entry
     
 if __name__ == "__main__":
-    #init_db_raw()
-    #init_db_processed()
-    find_atomic_range()
-    """
-        def __init__(self, lattice, atomicspecies, coords, validate_proximity = False, to_unit_cell = False, coords_are_cartesian = False):
-        
-        Create a periodic structure.
-        
-        Arguments:
-            lattice:
-                pymatgen.core.lattice Lattice object signify the lattice.
-            atomicspecies:
-                list of atomic species.  dict of elements and occupancies.
-            fractional_coords:
-                list of fractional coordinates of each species.
-            validate_proximity:
-                Whether to check if there are sites that are less than 1 Ang apart. Defaults to false.
-            coords_are_cartesian:
-                Set to True if you are providing coordinates in cartesian coordinates. Defaults to false.
-        """
+    # init_db_raw()
+    init_db_processed()
+    #find_atomic_range()

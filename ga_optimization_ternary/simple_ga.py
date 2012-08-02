@@ -8,6 +8,7 @@ from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple,\
     eval_fitness_complex, eval_fitness_partial
 from test.test_descrtut import defaultdict
 from collections import OrderedDict
+from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -16,7 +17,7 @@ __maintainer__ = "Anubhav Jain"
 __email__ = "ajain@lbl.gov"
 __date__ = "Mar 14, 2012"
 
-from pyevolve import G1DList, Mutators, Initializators
+from pyevolve import G1DList, Mutators, Initializators, GAllele
 from pyevolve import GSimpleGA
 from pyevolve import Selectors
 from pyevolve import Statistics, Crossovers
@@ -67,9 +68,6 @@ class StatTrack():
     def __init__(self, fe):
         self._candidates_tried = set()
         self._candidates_good = set()
-        #this is in Z representation
-        self._good_candidates = [(3, 23, False), (11, 51, False), (20, 32, False), (20, 50, False), (38, 32, False), (38, 50, False), (47, 41, False), (50, 22, False), (55, 41, False), (56, 50, False)]
-        self._good_candidates.extend([(12, 73, True), (20, 73, True), (38, 73, True), (56, 73, True), (57, 22, True)])
         self.generation_ncandidates = [0]
         self.generation_ngood = [0]
         self._fitness_evaluator = fe
@@ -79,18 +77,20 @@ class StatTrack():
             cand = self._fitness_evaluator.convert_raw_to_Z((i[0], i[1], i[2]))
             self._candidates_tried.add(cand)
             
-            if cand in self._good_candidates:
+            if cand in GOOD_CANDS_LS:
                 self._candidates_good.add(cand)
             
         self.generation_ncandidates.append(len(self._candidates_tried))
         self.generation_ngood.append(len(self._candidates_good))
-        if len(self._candidates_good) == len(self._good_candidates):
+        if len(self._candidates_good) == MAX_GOOD_LS:
             AllFound.ALL_FOUND = True
             
         return self.generation_ncandidates[-1] - self.generation_ncandidates[-2]
         
     def evolve_callback(self, ga):
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
+        
+        #TODO: make this a function of the popsize rather than 10
         if cands_added < 10:
             ga.setMutationRate(0.75)
         else:
@@ -116,10 +116,15 @@ class StatTrack():
 
 def run_simulation(pset, max_generations):
     
+    # Genome instance
+    setOfAlleles = GAllele.GAlleles()
+    setOfAlleles.add(GAllele.GAlleleRange(0, 51))
+    setOfAlleles.add(GAllele.GAlleleRange(0, 6))
+    setOfAlleles.add(GAllele.GAlleleRange(0, 51))
+
     # Genome instance, 1D List of 50 elements
     genome = G1DList.G1DList(3)
-    # Sets the range max and min of the 1D List
-    genome.setParams(rangemin=0, rangemax=51)
+    genome.setParams(allele=setOfAlleles)
     
     #Fitness function
     fe = FitnessEvaluatorZ(pset.fitness_fnc)
@@ -160,10 +165,10 @@ def main_loop():
     fitness_fncs = [eval_fitness_simple, eval_fitness_partial]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GTournamentSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]  # Rank selector is SLOW...
-    mutator_fncs = [Mutators.G1DListMutatorIntegerRange]
+    mutator_fncs = [Mutators.G1DListMutatorAllele]
     elitisms = [0, 1, 2, 5]
     nichings = [False]  # TODO: implement True
-    initialization_fncs = [Initializators.G1DListInitializatorInteger]  # TODO: add data-mined initializors
+    initialization_fncs = [Initializators.G1DListInitializatorAllele]  # TODO: add data-mined initializors
     
     for popsize in popsizes:
         for fitness_fnc in fitness_fncs:

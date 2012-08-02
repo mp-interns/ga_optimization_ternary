@@ -2,6 +2,7 @@
 
 from __future__ import division
 
+
 '''
 Created on Mar 14, 2012
 '''
@@ -19,8 +20,10 @@ from pymatgen.core.periodic_table import Element
 from scipy.interpolate import interp1d
 import numpy as np
 
-MAX_GOOD = 15
-MAX_CAND = 5408
+
+GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1), (38,32,0), (38,50,0), (38,73,1), (39,73,2), (47,22,4), (47,41,0), (49,72,4), (50,22,0), (55,41,0), (56,31,4), (56,49,4), (56,50,0), (56,73,1), (57,22,1), (57,73,2), (82,31,4)]
+MAX_GOOD_LS = len(GOOD_CANDS_LS)
+NUM_CANDS = 18928
 
 class M_Database():
     
@@ -31,13 +34,14 @@ class M_Database():
         
         for data in self._db.find():
             val = (data['gllbsc_dir-gap'], data['gllbsc_ind-gap'], data['heat_of_formation_all'], data['VB_dir'], data['CB_dir'], data['VB_ind'], data['CB_ind'])
-            self._all_data[Element(data['A']).Z][Element(data['B']).Z][data['contains_anion']] = val
+            self._all_data[Element(data['A']).Z][Element(data['B']).Z][data['anion_idx']] = val
         
-    def get_data(self, A, B, contains_N):
-        return self._all_data[A][B][contains_N]
-
+    def get_data(self, A, B, anion_idx):
+        return self._all_data[A][B][anion_idx]
+    
 
 class Stats_Database():
+    #TODO: MODIFY ME FOR MULTIPLE ANIONS!
     def __init__(self, clear=False):
         connection = pymongo.Connection('localhost', 12345)
         self._stats_raw = connection.unc.stats_raw
@@ -61,7 +65,7 @@ class Stats_Database():
         self._stats_raw.insert(doc)
     
     def process_stats(self):
-        
+        raise ValueError("look at 'all' and 'ten' and update")
         for expt in self._stats_raw.find():
             
             # remove any previous document
@@ -74,7 +78,7 @@ class Stats_Database():
             
             # initialize data
             num_iterations = len(expt['iterations'])
-            it_ng_nc = np.zeros((num_iterations, MAX_GOOD+1))  # [iteration, numgood] = (# candidates needed)
+            it_ng_nc = np.zeros((num_iterations, MAX_GOOD_LS + 1))  # [iteration, numgood] = (# candidates needed)
             
             for it, dat in enumerate(expt['iterations']):
                 ng = 0  # number good that we're trying to initialize
@@ -105,18 +109,19 @@ class Stats_Database():
                 
         
 if __name__ == "__main__":
-    s_db = Stats_Database()
-    s_db.process_stats()
-    """
     m_db = M_Database()
+    print len(m_db.good_cands_ls)
     
-    i = 0
+    """
+    hits = 0
     for A in m_db._all_data:
         for B in m_db._all_data[A]:
-            data = m_db._all_data[A][B][False]
-            i = i+1
-            if fitness_evaluators.eval_fitness_simple(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
-                print A, B, Element.from_Z(A), Element.from_Z(B)
+            for anion in m_db._all_data[A][B]:
+                data = m_db._all_data[A][B][anion]
+                i += 1
+                if eval_fitness_simple(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
+                    print '('+str(A)+","+str(B)+","+str(anion)+"),",
+                    hits +=1
     
-    print i
+    print i, hits
     """

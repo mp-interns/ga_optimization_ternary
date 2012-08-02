@@ -17,14 +17,14 @@ import math
 
 class FitnessEvaluatorZ():
     
-    def __init__(self, fitness=None):
+    def __init__(self, fitness):
         
         all_indices = range(52)
         all_Z = [3, 4, 5, 11, 12, 13, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 37, 38, 39, 40, 41, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 55, 56, 57, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]
         self._Z_dict = dict(zip(all_indices, all_Z))
         self._reverse_dict = dict(zip(all_Z, all_indices))
         self._db = M_Database()
-        self._fitness = fitness if fitness else eval_fitness_simple
+        self._fitness = fitness
 
     def array_to_score(self, genome):
         genome = self.convert_raw_to_Z(genome)
@@ -35,15 +35,14 @@ class FitnessEvaluatorZ():
         # note that we are representing as A, X, B to get symmetry between A & B
         A = self._reverse_dict[array[0]]
         B = self._reverse_dict[array[2]]
-        X = 0 if not array[1] else len(self._Z_dict) - 1
+        X = array[1]
         return (A, B, X)
     
     def convert_raw_to_Z(self, array):
         # note that we are representing as A, X, B to get symmetry between A & B
         A = self._Z_dict[array[0]]
         B = self._Z_dict[array[2]]
-        cutoff_idx = len(self._Z_dict) / 2
-        X = True if array[1] >= cutoff_idx else False
+        X = array[1]
         return (A, B, X)
 
 '''
@@ -117,11 +116,5 @@ def gaussian_pdf(x, mean=0):
 if __name__ == "__main__":
     fe = FitnessEvaluatorZ()
     #print fe.array_to_score((49,41,20))
-    print [i for i in fe.convert_Z_to_raw((12, 73, True))]
-    print [i for i in fe.convert_Z_to_raw((20, 73, True))]
-    print [i for i in fe.convert_Z_to_raw((38, 73, True))]
-    print [i for i in fe.convert_Z_to_raw((56, 73, True))]
-    print [i for i in fe.convert_Z_to_raw((12, 73, True))]
-    print [i for i in fe.convert_Z_to_raw((12, 73, True))]
-    print [i for i in fe.convert_Z_to_raw((12, 73, True))]
+    print [i for i in fe.convert_Z_to_raw((12, 1, 23))]
     #print gaussian_pdf(1)
