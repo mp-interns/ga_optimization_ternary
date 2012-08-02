@@ -19,7 +19,8 @@ from collections import defaultdict
 from pymatgen.core.periodic_table import Element
 from scipy.interpolate import interp1d
 import numpy as np
-
+import os
+import pickle
 
 GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1), (38,32,0), (38,50,0), (38,73,1), (39,73,2), (47,22,4), (47,41,0), (49,72,4), (50,22,0), (55,41,0), (56,31,4), (56,49,4), (56,50,0), (56,73,1), (57,22,1), (57,73,2), (82,31,4)]
 MAX_GOOD_LS = len(GOOD_CANDS_LS)
@@ -28,13 +29,24 @@ NUM_CANDS = 18928
 class M_Database():
     
     def __init__(self):
-        connection = pymongo.Connection('localhost', 12345)
-        self._db = connection.unc.data_process
-        self._all_data = defaultdict(lambda: defaultdict(dict))
+         
+        filename = "data_process.p"
+        if os.path.exists(filename):
+            with open(filename) as f:
+                self._all_data = pickle.load(f)
         
-        for data in self._db.find():
-            val = (data['gllbsc_dir-gap'], data['gllbsc_ind-gap'], data['heat_of_formation_all'], data['VB_dir'], data['CB_dir'], data['VB_ind'], data['CB_ind'])
-            self._all_data[Element(data['A']).Z][Element(data['B']).Z][data['anion_idx']] = val
+        else:
+            connection = pymongo.Connection('localhost', 12345)
+            self._db = connection.unc.data_process
+            self._all_data = defaultdict(lambda: defaultdict(dict))
+            
+            for data in self._db.find():
+                val = (data['gllbsc_dir-gap'], data['gllbsc_ind-gap'], data['heat_of_formation_all'], data['VB_dir'], data['CB_dir'], data['VB_ind'], data['CB_ind'])
+                self._all_data[Element(data['A']).Z][Element(data['B']).Z][data['anion_idx']] = val
+            
+            # dump the data
+            with open(filename, "wb") as f:
+                pickle.dump(dict(self._all_data), f)
         
     def get_data(self, A, B, anion_idx):
         return self._all_data[A][B][anion_idx]
@@ -110,7 +122,7 @@ class Stats_Database():
         
 if __name__ == "__main__":
     m_db = M_Database()
-    print len(m_db.good_cands_ls)
+    print 'YAY'
     
     """
     hits = 0
