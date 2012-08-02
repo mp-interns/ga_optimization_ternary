@@ -12,3 +12,4 @@ ga_optimization_ternary/database.pyc
 data/*
 */*.png
 */*.eps
+ga_optimization_ternary/fitness_evaluators.pyc
