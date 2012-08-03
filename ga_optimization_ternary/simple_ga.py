@@ -26,6 +26,8 @@ from database import Stats_Database
 
 from scipy.interpolate import interp1d
 
+import multiprocessing
+
 class AllFound():
     ALL_FOUND = False
                 
@@ -156,11 +158,9 @@ def run_simulation(pset, max_generations):
     
 
 def main_loop():
-    production = False
-    max_generations = 10000  # should always work...(hopefully)
-    num_iterations = 50
-    if production:
-        db = Stats_Database(clear=True)
+    ncores = 1
+    # clear the Stats DB
+    db = Stats_Database(clear=True)
     popsizes = [125, 250, 500, 1000]
     fitness_fncs = [eval_fitness_simple, eval_fitness_partial]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
@@ -170,6 +170,7 @@ def main_loop():
     nichings = [False]  # TODO: implement True
     initialization_fncs = [Initializators.G1DListInitializatorAllele]  # TODO: add data-mined initializors
     
+    all_ps = []
     for popsize in popsizes:
         for fitness_fnc in fitness_fncs:
             for crossover_fnc in crossover_fncs:
@@ -178,18 +179,38 @@ def main_loop():
                         for elitism in elitisms:
                             for niching in nichings:
                                 for initialization_fnc in initialization_fncs:
-                                    stats = []
-                                    for iteration in range(num_iterations):
-                                        AllFound.ALL_FOUND = False  # reset the simulation
-                                        ps = ParameterSet(crossover_fnc, fitness_fnc, selection_fnc, mutator_fnc, initialization_fnc, popsize, elitism, niching)  # set up the parameters
-                                        stat = run_simulation(ps, max_generations)
-                                        print stat.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
-                                        stats.append(stat)
-                                    if production:
-                                        db.add_stats_raw(ps, stats)
-                                    
-                                    
+                                    all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, selection_fnc, mutator_fnc, initialization_fnc, popsize, elitism, niching))  # set up the parameters
+ 
+    process_parallel(all_ps, ncores)
+
     
+def process_parameterset(ps):
+    num_iterations = 1
+    production = True
+    max_generations = 100000  # should always work...(hopefully)
     
+    if production:
+        db = Stats_Database(clear=False)
+    
+    stats = []
+    for iteration in range(num_iterations):
+        AllFound.ALL_FOUND = False  # reset the simulation
+        stat = run_simulation(ps, max_generations)
+        print stat.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
+        stats.append(stat)
+    
+    if production:
+        db.add_stats_raw(ps, stats)
+    
+    return 0
+
+
+def process_parallel(all_ps, ncores):
+    pool = multiprocessing.Pool(ncores)
+    states = pool.map(process_parameterset, all_ps)
+    state = 0 if all([s == 0 for s in states]) else -1
+    print "FINISHED with state", state
+
+
 if __name__ == "__main__":
     main_loop()
