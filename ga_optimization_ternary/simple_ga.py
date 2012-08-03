@@ -4,8 +4,7 @@ from __future__ import division
 '''
 Created on Mar 14, 2012
 '''
-from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple,\
-    eval_fitness_complex, eval_fitness_partial
+from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
 from test.test_descrtut import defaultdict
 from collections import OrderedDict
 from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS
@@ -27,6 +26,7 @@ from database import Stats_Database
 from scipy.interpolate import interp1d
 
 import multiprocessing
+import math
 
 class AllFound():
     ALL_FOUND = False
@@ -39,12 +39,15 @@ def AllFoundCriteria(ga_engine):
 
 class ParameterSet():
     
-    def __init__(self, crossover_fnc, fitness_fnc, selection_fnc, mutation_fnc, initialization_fnc, popsize, elitism_num, niching_bool):
+    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool):
         self.crossover_fnc = crossover_fnc
         self.fitness_fnc = fitness_fnc
+        self.fitness_temp = fitness_temp
         self.popsize = popsize
         self.selection_fnc = selection_fnc
         self.mutation_fnc = mutation_fnc
+        self.mutation_rate = mutation_rate
+        self.tournament_rate = tournament_rate
         self.initialization_fnc = initialization_fnc
         self.elitism_num = elitism_num
         self.niching_bool = niching_bool
@@ -53,8 +56,11 @@ class ParameterSet():
         d = OrderedDict()
         d['crossover_fnc'] = self.crossover_fnc.__name__
         d['fitness_fnc'] = self.fitness_fnc.__name__
+        d['fitness_temp'] = self.fitness_temp
         d['selection_fnc'] = self.selection_fnc.__name__
         d['mutation_fnc'] = self.mutation_fnc.__name__
+        d['mutation_rate'] = self.mutation_rate
+        d['tournament_rate'] = self.tournament_rate
         d['initialization_fnc'] = self.initialization_fnc.__name__
         d['popsize'] = self.popsize
         d['elitism_num'] = self.elitism_num
@@ -67,12 +73,15 @@ class ParameterSet():
 
 class StatTrack():
     
-    def __init__(self, fe):
+    def __init__(self, fe, mutation_rate, tournament_rate):
         self._candidates_tried = set()
         self._candidates_good = set()
         self.generation_ncandidates = [0]
         self.generation_ngood = [0]
         self._fitness_evaluator = fe
+        self.num_breakouts = 0
+        self.mutation_rate = mutation_rate
+        self.tournament_rate = tournament_rate
     
     def updateStats(self, generation_num, population):
         for i in population:
@@ -90,15 +99,18 @@ class StatTrack():
         return self.generation_ncandidates[-1] - self.generation_ncandidates[-2]
         
     def evolve_callback(self, ga):
+        ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         
-        #TODO: make this a function of the popsize rather than 10
-        if cands_added < 10:
+        breakout_cutoff = (int)(math.ceil(0.2 * len(ga.getPopulation().internalPop)))
+        #breakout_cutoff = 10
+        if cands_added < breakout_cutoff:
             ga.setMutationRate(0.75)
         else:
-            ga.setMutationRate(0.02)
+            ga.setMutationRate(self.mutation_rate)
+            self.num_breakouts += 1
             
-        if ga.currentGeneration == 0:
+        #if ga.currentGeneration == 0:
             '''
             print 'YAY'
             pop = ga.getPopulation()
@@ -129,9 +141,9 @@ def run_simulation(pset, max_generations):
     
     #Fitness function
     
-    fe = FitnessEvaluator(pset.fitness_fnc)
+    fe = FitnessEvaluator(pset.fitness_fnc, pset.fitness_temp)
     
-    st = StatTrack(fe)
+    st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate)
     
     genome.crossover.set(pset.crossover_fnc)
     genome.mutator.set(pset.mutation_fnc)
@@ -145,11 +157,14 @@ def run_simulation(pset, max_generations):
     ga.stepCallback.set(st.evolve_callback)
     ga.setPopulationSize(pset.popsize)
     ga.setGenerations(max_generations)
+    
     if pset.elitism_num > 0:
         ga.setElitism(True)
-        ga.setElitismReplacement(pset.elitism_num)
+        ga.setElitismReplacement((int)(math.ceil(pset.elitism_num * pset.popsize)))
     else:
         ga.setElitism(False)
+        
+    ga.setMutationRate(pset.mutation_rate)
     
     # TODO: figure out niching
     ga.evolve()
@@ -159,14 +174,18 @@ def run_simulation(pset, max_generations):
 
 def main_loop():
     ncores = 1
+    clear = False
     # clear the Stats DB
-    db = Stats_Database(clear=True)
-    popsizes = [125, 250, 500, 1000]
-    fitness_fncs = [eval_fitness_simple, eval_fitness_partial]
+    db = Stats_Database(clear=clear)
+    popsizes = [16, 100, 500, 1000]  #TODO: add 250 and 2000 later, if it is needed based on the data
+    fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
+    fitness_temps = [5, 10, 30]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
-    selection_fncs = [Selectors.GTournamentSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]  # Rank selector is SLOW...
+    selection_fncs = [Selectors.GTournamentSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]  # TODO: Rank selector is SLOW, add it later
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    elitisms = [0, 1, 2, 5]
+    tournament_rates = [0.1, 0.25, 0.5]
+    mutation_rates = [0.01, 0.05, 0.1]
+    elitisms = [0, 0.05, 0.25]
     nichings = [False]  # TODO: implement True
     initialization_fncs = [Initializators.G1DListInitializatorAllele]  # TODO: add data-mined initializors
     
@@ -179,13 +198,18 @@ def main_loop():
                         for elitism in elitisms:
                             for niching in nichings:
                                 for initialization_fnc in initialization_fncs:
-                                    all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, selection_fnc, mutator_fnc, initialization_fnc, popsize, elitism, niching))  # set up the parameters
- 
+                                    for m_rate in mutation_rates:
+                                        for fitness_temp in fitness_temps:
+                                            for tournament_rate in tournament_rates:
+                                                if (tournament_rate == tournament_rates[0] or selection_fnc == selection_fncs[0]):
+                                                    all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching))  # set up the parameters
+
     process_parallel(all_ps, ncores)
+    # process_serial(all_ps)
 
     
 def process_parameterset(ps):
-    num_iterations = 1
+    num_iterations = 50
     production = True
     max_generations = 100000  # should always work...(hopefully)
     
@@ -196,7 +220,7 @@ def process_parameterset(ps):
     for iteration in range(num_iterations):
         AllFound.ALL_FOUND = False  # reset the simulation
         stat = run_simulation(ps, max_generations)
-        print stat.generation_ncandidates[-1], ps.to_dict(), ps.unique_key()
+        print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
         stats.append(stat)
     
     if production:
@@ -211,6 +235,10 @@ def process_parallel(all_ps, ncores):
     state = 0 if all([s == 0 for s in states]) else -1
     print "FINISHED with state", state
 
+
+def process_serial(all_ps):
+    for ps in all_ps:
+        process_parameterset(ps)
 
 if __name__ == "__main__":
     main_loop()

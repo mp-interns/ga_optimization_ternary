@@ -53,7 +53,6 @@ class M_Database():
     
 
 class Stats_Database():
-    #TODO: MODIFY ME FOR MULTIPLE ANIONS!
     def __init__(self, clear=False):
         connection = pymongo.Connection('localhost', 12345)
         self._stats_raw = connection.unc.stats_raw
@@ -64,7 +63,6 @@ class Stats_Database():
     
     def add_stats_raw(self, ps, stats):
         doc = {}
-        self._stats_raw.remove({"unique_key":ps.unique_key()})
         doc['unique_key'] = ps.unique_key()
         doc['parameters'] = ps.to_dict()
         doc['iterations'] = []
@@ -73,11 +71,11 @@ class Stats_Database():
             for gen in range(len(stat.generation_ngood)):
                 it_data.append({"n_cand":stat.generation_ncandidates[gen], "n_good":stat.generation_ngood[gen]})
             doc['iterations'].append(it_data)
+            doc['num_breakouts'] = stat.num_breakouts
                 
         self._stats_raw.insert(doc)
     
     def process_stats(self):
-        raise ValueError("look at 'all' and 'ten' and update")
         for expt in self._stats_raw.find():
             
             # remove any previous document
@@ -113,8 +111,9 @@ class Stats_Database():
             doc['ng_min'] = ng_min
             doc['ng_max'] = ng_max
             doc['ng_range'] = ng_range
-            doc['all'] = ng_avg[15]  # shorthand, avg number of candidates needed to get all good cands
+            doc['all'] = ng_avg[MAX_GOOD_LS]  # shorthand, avg number of candidates needed to get all good cands
             doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
+            doc['fifteen'] = ng_avg[15]  # shorthand, avg number of candidates needed to get 15 good cands (about 2/3)
             
             print doc
             self._stats_process.insert(doc)

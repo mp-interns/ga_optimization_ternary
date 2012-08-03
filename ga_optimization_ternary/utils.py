@@ -4,7 +4,6 @@ from __future__ import division
 '''
 Created on Jul 11, 2012
 '''
-from ga_optimization_ternary.database import MAX_GOOD, MAX_CAND
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -46,8 +45,8 @@ def _get_prob_bailey(JC, CC, JJ):
     print a
     
 if __name__ == "__main__":
-    _get_prob_bailey(3, 200, 6)
-    _get_prob(3, 200, 6)
+    # _get_prob_bailey(3, 200, 6)
+    _get_prob(22, 18928, 22)
     """
     a = []
     for i in range(0, MAX_GOOD):
