@@ -61,6 +61,23 @@ class Stats_Database():
             self._stats_raw.remove()
             self._stats_process.remove()
     
+    def add_stat_raw(self, ps, stat, iteration):
+        doc = {}
+        doc['unique_key'] = ps.unique_key()
+        doc['iteration'] = iteration
+        if iteration == 0:
+            doc['parameters'] = ps.to_dict()
+        
+        it_data = []
+        for gen in range(len(stat.generation_ngood)):
+            it_data.append({"n_cand":stat.generation_ncandidates[gen], "n_good":stat.generation_ngood[gen]})
+        
+        doc['data'] = it_data
+        doc['num_breakouts'] = stat.num_breakouts
+                
+        self._stats_raw.insert(doc)
+    
+    '''
     def add_stats_raw(self, ps, stats):
         doc = {}
         doc['unique_key'] = ps.unique_key()
@@ -74,8 +91,10 @@ class Stats_Database():
             doc['num_breakouts'] = stat.num_breakouts
                 
         self._stats_raw.insert(doc)
-    
+    '''
+        
     def process_stats(self):
+        raise ValueError("This must be updated...")
         for expt in self._stats_raw.find():
             
             # remove any previous document
@@ -99,7 +118,7 @@ class Stats_Database():
                         
             ng_it_nc = np.transpose(it_ng_nc)  # [numgood, iteration] = (# candidates needed)
             
-            ng_avg =  [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
+            ng_avg = [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
             ng_stdev = [np.std(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] # [numgood] = (stdev # of candidates needed)
             ng_min = [np.min(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] 
             ng_max = [np.max(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]

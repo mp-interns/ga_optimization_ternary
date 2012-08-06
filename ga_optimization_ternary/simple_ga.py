@@ -204,6 +204,7 @@ def main_loop():
                                                 if (tournament_rate == tournament_rates[0] or selection_fnc == selection_fncs[0]):
                                                     all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching))  # set up the parameters
 
+    print 'the number of parameter sets is', len(all_ps)
     process_parallel(all_ps, ncores)
     # process_serial(all_ps)
 
@@ -211,20 +212,22 @@ def main_loop():
 def process_parameterset(ps):
     num_iterations = 50
     production = True
-    max_generations = 100000  # should always work...(hopefully)
+    max_generations = 20000  # should always work...(hopefully)
     
     if production:
         db = Stats_Database(clear=False)
     
-    stats = []
+    # stats = []
     for iteration in range(num_iterations):
         AllFound.ALL_FOUND = False  # reset the simulation
         stat = run_simulation(ps, max_generations)
         print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
-        stats.append(stat)
+        if production:
+            db.add_stat_raw(ps, stat, iteration)
+        # stats.append(stat)
     
-    if production:
-        db.add_stats_raw(ps, stats)
+    #if production:
+    #    db.add_stats_raw(ps, stats)
     
     return 0
 
