@@ -216,14 +216,14 @@ def process_parameterset(ps):
     
     if production:
         db = Stats_Database(clear=False)
-    
-    # stats = []
-    for iteration in range(num_iterations):
-        AllFound.ALL_FOUND = False  # reset the simulation
-        stat = run_simulation(ps, max_generations)
-        print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
-        if production:
-            db.add_stat_raw(ps, stat, iteration)
+        if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() == num_iterations:
+            db._stats_raw.remove({"unique_key": ps.unique_key()}, safe=True)
+            for iteration in range(num_iterations):
+                AllFound.ALL_FOUND = False  # reset the simulation
+                stat = run_simulation(ps, max_generations)
+                print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
+                if production:
+                    db.add_stat_raw(ps, stat, iteration)
         # stats.append(stat)
     
     #if production:
