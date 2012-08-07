@@ -224,6 +224,8 @@ def process_parameterset(ps):
                 print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
                 if production:
                     db.add_stat_raw(ps, stat, iteration)
+        else:
+            print 'SKIPPING KEY' + ps.unique_key()
         # stats.append(stat)
     
     #if production:
