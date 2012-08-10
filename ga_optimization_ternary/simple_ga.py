@@ -173,7 +173,7 @@ def run_simulation(pset, max_generations):
     
 
 def main_loop():
-    ncores = 1
+    ncores = 7
     clear = False
     # clear the Stats DB
     db = Stats_Database(clear=clear)
@@ -210,13 +210,13 @@ def main_loop():
 
     
 def process_parameterset(ps):
-    num_iterations = 50
+    num_iterations = 15
     production = True
     max_generations = 20000  # should always work...(hopefully)
     
     if production:
         db = Stats_Database(clear=False)
-        if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() == num_iterations:
+        if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= num_iterations:
             db._stats_raw.remove({"unique_key": ps.unique_key()}, safe=True)
             for iteration in range(num_iterations):
                 AllFound.ALL_FOUND = False  # reset the simulation
