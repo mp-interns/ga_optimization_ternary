@@ -181,7 +181,7 @@ def main_loop():
     fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
     fitness_temps = [5, 10, 30]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
-    selection_fncs = [Selectors.GTournamentSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]  # TODO: Rank selector is SLOW, add it later
+    selection_fncs = [Selectors.GTournamentSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]  # TODO: Rank selector is SLOW, add it later.  #TODO: add alternative Tournament selector, see if it's as good as regular tournament selector
     mutator_fncs = [Mutators.G1DListMutatorAllele]
     tournament_rates = [0.1, 0.25, 0.5]
     mutation_rates = [0.01, 0.05, 0.1]
