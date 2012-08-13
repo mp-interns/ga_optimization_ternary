@@ -32,19 +32,29 @@ def get_ranked_list_goldschmidt():
     cand_score = {}  # dictionary of cand_tuple:score. a high score is BAD
     for a in all_AB:
         for b in all_AB:
-            for x in (True, False):
+            for x in range(7):
                 r_a = Element.from_Z(a).average_ionic_radius  # TODO: get the correct oxidation state!
                 r_b = Element.from_Z(b).average_ionic_radius
                 r_x = None
-                if x:
-                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("N").ionic_radii[-3] * 1/3
-                else:
+                if x == 0:
                     r_x = Element("O").ionic_radii[-2]
+                elif x == 1:
+                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("N").ionic_radii[-3] * 1/3
+                elif x == 2:
+                    r_x = Element("O").ionic_radii[-2] * 1/3 + Element("N").ionic_radii[-3] * 2/3
+                elif x == 3:
+                    r_x = Element("N").ionic_radii[-3]
+                elif x == 4:
+                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("F").ionic_radii[-1] * 1/3
+                elif x == 5:
+                    r_x = Element("O").ionic_radii[-2] * 1/3 + Element("F").ionic_radii[-1] * 1/3 + Element("N").ionic_radii[-3] * 1/3
+                elif x == 6:
+                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("S").ionic_radii[-2] * 1/3
                 
                 goldschmidt = (r_a + r_x)/(math.sqrt(2) *(r_b+r_x))
                 score = abs(goldschmidt - 1)  # a high score is bad, like golf
                 cand_score[(a, b, x)] = score
-    
+            
     results = sorted(cand_score, key=cand_score.get)
     with open(filename, "wb") as f:
         pickle.dump(results, f)
