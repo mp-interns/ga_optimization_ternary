@@ -55,8 +55,8 @@ class M_Database():
 class Stats_Database():
     def __init__(self, clear=False):
         connection = pymongo.Connection('localhost', 12345)
-        self._stats_raw = connection.unc.stats_raw
-        self._stats_process = connection.unc.stats_process
+        self._stats_raw = connection.unc2.stats_raw
+        self._stats_process = connection.unc2.stats_process
         if clear:
             self._stats_raw.remove()
             self._stats_process.remove()
@@ -92,6 +92,50 @@ class Stats_Database():
                 
         self._stats_raw.insert(doc)
     '''
+        
+    def process_stats_new(self):
+        num_iterations = 15
+        for key in self._stats_raw.distinct("unique_key"):
+            
+            #TODO: fix me
+            if self._stats_raw.find({"unique_key":key}).count() >= num_iterations and self._stats_raw.find({"unique_key":key, "parameters.popsize":{"$lte":100}}).count() > 0:
+                # we have a good param set ... go through the iterations
+                doc = {}
+                it_ng_nc = np.zeros((num_iterations, MAX_GOOD_LS + 1))  # [iteration, numgood] = (# candidates needed)
+                
+                for it in range(num_iterations):
+                    expt = self._stats_raw.find_one({"unique_key":key, "iteration":it})
+                    if it == 0:
+                        # remove any previous document
+                        self._stats_process.remove({"unique_key": expt['unique_key']})
+                        doc['parameters'] = expt['parameters']
+                        doc['unique_key'] = expt['unique_key']
+                        print doc
+                       
+                    ng = 0  # number good that we're trying to initialize
+                    for gen in expt['data']:
+                        while gen['n_good'] >= ng:
+                            it_ng_nc[it][ng] = gen['n_cand']
+                            ng += 1
+                    
+                ng_it_nc = np.transpose(it_ng_nc)  # [numgood, iteration] = (# candidates needed)
+                ng_avg = [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
+                ng_stdev = [np.std(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] # [numgood] = (stdev # of candidates needed)
+                ng_min = [np.min(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] 
+                ng_max = [np.max(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]
+                ng_range = [ng_max[idx] - ng_min[idx] for idx in range(len(ng_max))]
+    
+                doc['ng_it_nc'] = ng_it_nc.tolist()
+                doc['ng_avg'] = ng_avg
+                doc['ng_stdev'] = ng_stdev
+                doc['ng_min'] = ng_min
+                doc['ng_max'] = ng_max
+                doc['ng_range'] = ng_range
+                doc['all'] = ng_avg[MAX_GOOD_LS]  # shorthand, avg number of candidates needed to get all good cands
+                doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
+                doc['fifteen'] = ng_avg[15]  # shorthand, avg number of candidates needed to get 15 good cands (about 2/3)
+                print doc
+                self._stats_process.insert(doc)
         
     def process_stats(self):
         raise ValueError("This must be updated...")
@@ -139,8 +183,8 @@ class Stats_Database():
                 
         
 if __name__ == "__main__":
-    m_db = M_Database()
-    print 'YAY'
+    s_db = Stats_Database()
+    s_db.process_stats_new()
     
     """
     hits = 0
