@@ -10,6 +10,7 @@ import math
 from ga_optimization_ternary.simple_ga import StatTrack
 import pickle
 import os
+from ga_optimization_ternary.database import GOOD_CANDS_LS
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -27,7 +28,7 @@ def get_ranked_list_goldschmidt():
         with open(filename) as f:
             return pickle.load(f)
     
-    all_AB = FitnessEvaluator(eval_fitness_simple)._reverse_dict.keys()
+    all_AB = FitnessEvaluator(eval_fitness_simple, 10)._reverse_dict.keys()
     print 'generating goldschmidt ranks...'
     cand_score = {}  # dictionary of cand_tuple:score. a high score is BAD
     for a in all_AB:
@@ -110,7 +111,7 @@ def get_stats(ranked_list):
     # each element of the list is a vector of (A, X, B)
     num_good = [0]
     num_cands = [0]
-    good_cands = StatTrack(None)._good_candidates
+    good_cands = GOOD_CANDS_LS
     
     counter = 0
     for cand in ranked_list:

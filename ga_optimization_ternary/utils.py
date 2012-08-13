@@ -4,6 +4,7 @@ from __future__ import division
 '''
 Created on Jul 11, 2012
 '''
+from ga_optimization_ternary.database import MAX_GOOD_LS, NUM_CANDS
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -37,7 +38,7 @@ def _get_prob(k, M, n):
     return topsum/bottomsum
 
 def get_reference_array():
-    return [0, 338.06249999996948, 676.12500000002126, 1014.1875000000172, 1352.2499999999927, 1690.3124999999836, 2028.3749999999909, 2366.4374999999732, 2704.4999999999764, 3042.5624999999914, 3380.6249999999941, 3718.6874999999995, 4056.7499999999932, 4394.8124999999964, 4732.8750000000027, 5070.9374999999982]
+    return [0, 823.0, 1646.0, 2469.0, 3292.0, 4115.0, 4938.0, 5761.0, 6584.0, 7407.0, 8230.0, 9053.0, 9876.0, 10699.0, 11522.0, 12345.0, 13168.0, 13991.0, 14814.0, 15637.0, 16460.0, 17283.0, 18106.0]
 
 def _get_prob_bailey(JC, CC, JJ):
     a = (CC + 1)*(CC + CC*CC - 2*CC*JC + JC*(JC - 1)) * comb(CC, JC - 1) / ((JC + 1)*(JC + 2)*comb(CC, JJ))
@@ -46,12 +47,10 @@ def _get_prob_bailey(JC, CC, JJ):
     
 if __name__ == "__main__":
     # _get_prob_bailey(3, 200, 6)
-    _get_prob(22, 18928, 22)
-    """
+    # _get_prob(22, 18928, 22)
     a = []
-    for i in range(0, MAX_GOOD):
+    for i in range(0, MAX_GOOD_LS):
         print i+1
-        a.append(_get_prob(i+1, MAX_CAND, 15))
+        a.append((i+1) * (NUM_CANDS+1)/(MAX_GOOD_LS+1))
     
     print a
-    """
