@@ -8,7 +8,8 @@ from ga_optimization_ternary.database import M_Database, Stats_Database, MAX_GOO
     NUM_CANDS
 from ga_optimization_ternary.utils import get_reference_array
 from ga_optimization_ternary import ranked_list_optimization
-from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt
+from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt,\
+    get_ranked_list_goldschmidt_halffill
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -89,7 +90,7 @@ class PerformancePlot():
     
     def get_goldschmidt_data(self):
         color = [.996, .415, 0]
-        y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt())
+        y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt_halffill())
         plt.errorbar(x, y, lw=self.lw, color=color)
         plt.annotate("goldschmidt", xy = (x[15], y[15]), xytext = (5, -15), color=color, textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
@@ -135,7 +136,7 @@ class ComparisonPlot():
         plt.errorbar(x, y, lw=self.lw, color="red")
         plt.annotate("10 materials", xy = (x[50], y[50]), xytext = (10, 0), color="red", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
-        color = [.996, .415, 0]
+        color = [0, 0, 0]
         x = []
         y = []
         idx = 1
@@ -143,8 +144,8 @@ class ComparisonPlot():
             x.append(idx)
             idx = idx + 1
             y.append(get_reference_array()[15]/data["fifteen"])
-        plt.errorbar(x, y, lw=self.lw, color=color)
-        plt.annotate("15 materials", xy = (x[75], y[75]), xytext = (50, -10), color=color, textcoords = 'offset points', ha = 'left', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.errorbar(x, y, lw=self.lw, color="blue")
+        plt.annotate("15 materials", xy = (x[75], y[75]), xytext = (50, -10), color="blue", textcoords = 'offset points', ha = 'left', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
         x = []
         y = []
@@ -153,8 +154,8 @@ class ComparisonPlot():
             x.append(idx)
             idx = idx + 1
             y.append(get_reference_array()[MAX_GOOD_LS]/data["all"])
-        plt.errorbar(x, y, lw=self.lw, color="blue")
-        plt.annotate("all 22 materials", xy = (x[100], y[100]), xytext = (25, 5), color="blue", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.errorbar(x, y, lw=self.lw, color=color)
+        plt.annotate("all 22 materials", xy = (x[100], y[100]), xytext = (25, 5), color=color, textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference(self):
         x = [0, self.num_exps]
@@ -234,10 +235,10 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    #PerformancePlot()
-    #ComparisonPlot()
-    ParametersPlot()
-    #plt.show()
+    PerformancePlot()
+    #ComparisonPlot(format="png")
+    #ParametersPlot(format="png")
+    plt.show()
     
     # DataTable()
     

@@ -104,6 +104,76 @@ def get_ranked_list_goldschmidt_smart():
         pickle.dump(results, f)
     return results
 
+
+def get_ranked_list_goldschmidt_halffill():
+    #TODO: get the oxidation state right!!!
+    
+    filename = "goldschmidt_rank_halffill.p"
+    if os.path.exists(filename):
+        with open(filename) as f:
+            return pickle.load(f)
+    
+    all_AB = FitnessEvaluator(eval_fitness_simple, 10)._reverse_dict.keys()
+    print 'generating goldschmidt ranks...'
+    cand_score = {}  # dictionary of cand_tuple:score. a high score is BAD
+    good_cands = GOOD_CANDS_LS
+    for a in all_AB:
+        for b in all_AB:
+            for x in range(7):
+                r_a = Element.from_Z(a).average_ionic_radius  # TODO: get the correct oxidation state!
+                r_b = Element.from_Z(b).average_ionic_radius
+                r_x = None
+                if x == 0:
+                    r_x = Element("O").ionic_radii[-2]
+                elif x == 1:
+                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("N").ionic_radii[-3] * 1/3
+                elif x == 2:
+                    r_x = Element("O").ionic_radii[-2] * 1/3 + Element("N").ionic_radii[-3] * 2/3
+                elif x == 3:
+                    r_x = Element("N").ionic_radii[-3]
+                elif x == 4:
+                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("F").ionic_radii[-1] * 1/3
+                elif x == 5:
+                    r_x = Element("O").ionic_radii[-2] * 1/3 + Element("F").ionic_radii[-1] * 1/3 + Element("N").ionic_radii[-3] * 1/3
+                elif x == 6:
+                    r_x = Element("O").ionic_radii[-2] * 2/3 + Element("S").ionic_radii[-2] * 1/3
+                
+                goldschmidt = (r_a + r_x)/(math.sqrt(2) *(r_b+r_x))
+                score = abs(goldschmidt - 1)  # a high score is bad, like golf
+                
+                #modify the score based on even-odd rule
+                even_found = False
+                el_a = Element.from_Z(a)
+                el_b = Element.from_Z(b)
+                val_x = 0
+                if x == 0:
+                    val_x = -2 * 3
+                elif x == 1:
+                    val_x = (-2 * 2) + (-3 * 1)
+                elif x == 2:
+                    val_x = (-2 * 1) + (-3 * 2)
+                elif x == 3:
+                    val_x = -3 * 3
+                elif x == 4:
+                    val_x = (-2 * 2) + (-1 * 1)
+                elif x == 5:
+                    val_x = (-2 * 1) + (-1 * 1) + (-3 * 1)
+                elif x == 6:
+                    val_x = (-2 * 2) + (-2 * 1)
+                
+                for a_oxi in el_a.oxidation_states:
+                    for b_oxi in el_b.oxidation_states:
+                        if (a_oxi + b_oxi + val_x) % 2 == 0:
+                            even_found = True
+                
+                if not even_found:
+                    score = score + 100
+                cand_score[(a, b, x)] = score
+            
+    results = sorted(cand_score, key=cand_score.get)
+    with open(filename, "wb") as f:
+        pickle.dump(results, f)
+    return results
     
         
 def get_stats(ranked_list):
@@ -123,7 +193,6 @@ def get_stats(ranked_list):
     return (num_good, num_cands)
         
 if __name__ == "__main__":
-    
-    a, b = get_stats(get_ranked_list_goldschmidt())
+    a, b = get_stats(get_ranked_list_goldschmidt_halffill())
     print a
     print b
