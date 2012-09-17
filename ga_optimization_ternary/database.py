@@ -99,7 +99,7 @@ class Stats_Database():
         for key in self._stats_raw.distinct("unique_key"):
             
             #TODO: fix me
-            if self._stats_raw.find({"unique_key":key}).count() >= num_iterations and self._stats_raw.find({"unique_key":key, "parameters.popsize":{"$lte":100}}).count() > 0:
+            if self._stats_raw.find({"unique_key": key}).count() >= num_iterations:
                 # we have a good param set ... go through the iterations
                 doc = {}
                 it_ng_nc = np.zeros((num_iterations, MAX_GOOD_LS + 1))  # [iteration, numgood] = (# candidates needed)
@@ -184,8 +184,9 @@ class Stats_Database():
                 
         
 if __name__ == "__main__":
-    #s_db = Stats_Database()
-    #s_db.process_stats_new()
+    s_db = Stats_Database()
+    s_db.process_stats_new()
+    """
     m_db = M_Database()
     from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple
     hits = 0
@@ -198,3 +199,4 @@ if __name__ == "__main__":
                     hits +=1
     
     print hits
+    """
