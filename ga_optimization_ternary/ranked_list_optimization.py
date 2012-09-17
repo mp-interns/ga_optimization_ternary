@@ -141,7 +141,26 @@ def get_ranked_list_goldschmidt_halffill():
                 goldschmidt = (r_a + r_x)/(math.sqrt(2) *(r_b+r_x))
                 score = abs(goldschmidt - 1)  # a high score is bad, like golf
                 
-                #modify the score based on even-odd rule
+                #nelectrons must be even
+                ne_a = Element.from_Z(a).Z
+                ne_b = Element.from_Z(b).Z
+                ne_x = None
+                if x == 0:
+                    ne_x = Element("O").Z * 3
+                elif x == 1:
+                    ne_x = Element("O").Z * 2 + Element("N").Z
+                elif x == 2:
+                    ne_x = Element("O").Z + Element("N").Z * 2
+                elif x == 3:
+                    ne_x = Element("N").Z
+                elif x == 4:
+                    ne_x = Element("O").Z * 2 + Element("F").Z
+                elif x == 5:
+                    ne_x = Element("O").Z + Element("F").Z + Element("N").Z
+                elif x == 6:
+                    ne_x = Element("O").Z * 2 + Element("S").Z
+                
+                #modify the score based on charge-balance
                 even_found = False
                 el_a = Element.from_Z(a)
                 el_b = Element.from_Z(b)
@@ -163,7 +182,7 @@ def get_ranked_list_goldschmidt_halffill():
                 
                 for a_oxi in el_a.oxidation_states:
                     for b_oxi in el_b.oxidation_states:
-                        if (a_oxi + b_oxi + val_x) % 2 == 0:
+                        if (ne_a + ne_b + ne_x) % 2 == 0 and (a_oxi + b_oxi + val_x) == 0:
                             even_found = True
                 
                 if not even_found:

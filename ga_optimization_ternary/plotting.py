@@ -56,7 +56,7 @@ class PerformancePlot():
         
         self.get_reference_data()  # reference
         self.get_goldschmidt_data()  # goldschmidt reference
-        self.get_data(0, "best GA", "blue")  # best
+        self.get_data(0, "best GA", "blue", pos="right")  # best
         self.get_data(num_exps-1, "worst GA", "red", "right")  # ~worst
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
@@ -92,7 +92,7 @@ class PerformancePlot():
         color = [.996, .415, 0]
         y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt_halffill())
         plt.errorbar(x, y, lw=self.lw, color=color)
-        plt.annotate("goldschmidt", xy = (x[15], y[15]), xytext = (5, -15), color=color, textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate("chemical\nrules", xy = (x[20], y[20]), xytext = (5, 10), color=color, textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference_data(self):
         x = [0, get_reference_array()[MAX_GOOD_LS]]
@@ -235,7 +235,7 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    PerformancePlot()
+    PerformancePlot(format="eps")
     #ComparisonPlot(format="png")
     #ParametersPlot(format="png")
     plt.show()
