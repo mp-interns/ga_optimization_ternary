@@ -179,7 +179,7 @@ def main_loop():
     db = Stats_Database(clear=clear)
     popsizes = [16, 100, 500, 1000]  #TODO: add 250 and 2000 later, if it is needed based on the data
     fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
-    fitness_temps = [5, 10, 30]
+    fitness_temps = [5, 25, 50]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GTournamentSelectorAlternative, Selectors.GRankSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
