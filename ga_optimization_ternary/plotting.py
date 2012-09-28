@@ -31,7 +31,9 @@ def get_pretty_name(ugly_name):
     d['G1DListCrossoverTwoPoint'] = "Two Point"
     d['G1DListCrossoverUniform'] = "Uniform"
     d['GRouletteWheel'] = "Roulette"
-    d['GTournamentSelector'] = "Tournament"
+    d['GTournamentSelector'] = "T"
+    d['GRankSelector'] = "Rank"
+    d['GTournamentSelectorAlternative'] = "Tourn."
     d['GUniformSelector'] = "Uniform"
     d['eval_fitness_partial'] = "Partial"
     d['eval_fitness_simple'] = "All-or-Nothing"
@@ -193,9 +195,10 @@ class ParametersPlot():
         labels.sort()
         for label in labels:
             # get the best
-            #best = self.stats_process.find({"parameters."+parameter:label}, sort=[("fifteen",pymongo.ASCENDING)])[0]
-            #data.append(get_reference_array()[15]/best["fifteen"])
-            
+            '''
+            best = self.stats_process.find({"parameters."+parameter:label}, sort=[("fifteen",pymongo.ASCENDING)])[0]
+            data.append(get_reference_array()[15]/best["fifteen"])
+            '''
             
             # get the average
             m_sum = 0.0
@@ -204,7 +207,6 @@ class ParametersPlot():
                 m_sum = m_sum + get_reference_array()[15] / item["fifteen"]
                 npoints = npoints + 1
             data.append(m_sum / npoints)
-            
         pretty_labels = [get_pretty_name(n) for n in labels]
         xlocations = np.array(range(len(data))) + 0.5
         width = 0.75
