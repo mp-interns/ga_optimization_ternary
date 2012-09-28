@@ -193,9 +193,18 @@ class ParametersPlot():
         labels.sort()
         for label in labels:
             # get the best
-            best = self.stats_process.find({"parameters."+parameter:label}, sort=[("all",pymongo.ASCENDING)])[0]
-            data.append(get_reference_array()[MAX_GOOD_LS]/best["all"])
-        
+            #best = self.stats_process.find({"parameters."+parameter:label}, sort=[("fifteen",pymongo.ASCENDING)])[0]
+            #data.append(get_reference_array()[15]/best["fifteen"])
+            
+            
+            # get the average
+            m_sum = 0.0
+            npoints = 0.0
+            for item in self.stats_process.find({"parameters." + parameter: label}, {"fifteen": 1}):
+                m_sum = m_sum + get_reference_array()[15] / item["fifteen"]
+                npoints = npoints + 1
+            data.append(m_sum / npoints)
+            
         pretty_labels = [get_pretty_name(n) for n in labels]
         xlocations = np.array(range(len(data))) + 0.5
         width = 0.75
@@ -235,10 +244,16 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    PerformancePlot(format="eps")
-    #ComparisonPlot(format="png")
-    #ParametersPlot(format="png")
-    plt.show()
+    format = None
+    
+    if format:
+        PerformancePlot(format=format)
+        ComparisonPlot(format=format)
+        #ParametersPlot(format=format)
+    
+    else:
+        ParametersPlot()
+        plt.show()
     
     # DataTable()
     
