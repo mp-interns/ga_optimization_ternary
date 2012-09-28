@@ -56,8 +56,8 @@ class M_Database():
 class Stats_Database():
     def __init__(self, clear=False):
         connection = pymongo.Connection('localhost', 12345)
-        self._stats_raw = connection.unc2.stats_raw
-        self._stats_process = connection.unc2.stats_process
+        self._stats_raw = connection.unc.stats_raw
+        self._stats_process = connection.unc.stats_process
         if clear:
             self._stats_raw.remove()
             self._stats_process.remove()
