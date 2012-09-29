@@ -102,10 +102,10 @@ class StatTrack():
         ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         
-        breakout_cutoff = (int)(math.ceil(0.2 * len(ga.getPopulation().internalPop)))
+        breakout_cutoff = (int)(math.ceil(0.15 * len(ga.getPopulation().internalPop)))
         #breakout_cutoff = 10
         if cands_added < breakout_cutoff:
-            ga.setMutationRate(0.75)
+            ga.setMutationRate(0.5)
         else:
             ga.setMutationRate(self.mutation_rate)
             self.num_breakouts += 1
@@ -179,9 +179,9 @@ def main_loop():
     db = Stats_Database(clear=clear)
     popsizes = [16, 100, 500, 1000]  #TODO: add 250 and 2000 later, if it is needed based on the data
     fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
-    fitness_temps = [5, 25, 50]
+    fitness_temps = [5, 25, 50]  # TODO: replace by LinearScalingConst, only use for RouletteWheel selector
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
-    selection_fncs = [Selectors.GTournamentSelectorAlternative, Selectors.GRankSelector, Selectors.GRouletteWheel, Selectors.GUniformSelector]
+    selection_fncs = [Selectors.GTournamentSelectorAlternative, Selectors.GRouletteWheel, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
     tournament_rates = [0.05, 0.1, 0.5]
     mutation_rates = [0.01, 0.1, 0.25]
@@ -201,7 +201,7 @@ def main_loop():
                                     for m_rate in mutation_rates:
                                         for fitness_temp in fitness_temps:
                                             for tournament_rate in tournament_rates:
-                                                if (tournament_rate == tournament_rates[0] or selection_fnc == selection_fncs[0] or selection_fnc == selection_fncs[1]):
+                                                if (tournament_rate == tournament_rates[0] or selection_fnc == selection_fncs[0]):
                                                     all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching))  # set up the parameters
 
     print 'the number of parameter sets is', len(all_ps)
