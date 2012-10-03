@@ -15,6 +15,11 @@ from pymatgen.core.periodic_table import Element
 from database import M_Database
 import math
 
+
+def gaussian_pdf(x, mean=0):
+    return (1/math.sqrt(2*math.pi))*math.exp(-0.5*(x-mean)*(x-mean))
+
+
 class FitnessEvaluator():
     
     def __init__(self, fitness, temperature):
@@ -31,8 +36,8 @@ class FitnessEvaluator():
         genome = self.convert_raw_to_Z(genome)
         gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind = self._db.get_data(genome[0], genome[1], genome[2])
         raw_fit = self._fitness(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)
-        scaled_fit = math.exp(raw_fit/self._temp)
-        return scaled_fit
+        # scaled_fit = math.exp(raw_fit/self._temp)
+        return raw_fit
                                           
     def convert_Z_to_raw(self, array):
         # note that we are representing as A, X, B to get symmetry between A & B
@@ -75,47 +80,75 @@ class FitnessEvaluatorElectronegativity():
 
 '''
 def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
-        score_3 = 0
+        stab_score = 0
+        gap_dir_score = 0
+        gap_ind_score = 0
         
-        if (gap_dir >= 1.5 and gap_dir <= 3) or (gap_ind >= 1.5 and gap_ind <= 3):
-            score_1 = 10
+        if (gap_dir >= 1.5 and gap_dir <= 3):
+            gap_dir_score += 10
         else:
-            score_1 = (max(gaussian_pdf(gap_dir, 2.25), gaussian_pdf(gap_ind, 2.25)) * 33)
-        
+            gap_dir_score += gaussian_pdf(gap_dir, 2.25)
+            
+        if (gap_ind >= 1.5 and gap_ind <= 3):
+            gap_ind_score += 10
+        else:
+            gap_ind_score += gaussian_pdf(gap_ind, 2.25)
+            
         if heat_of_formation <= 0.2:
-            score_2 = 10
+            stab_score = 10
         else:
-            score_2 = 20 * (1-1/(1+math.exp(((-heat_of_formation) + 0.2) * 3.5)))
+            stab_score = 20 * (1-1/(1+math.exp(((-heat_of_formation) + 0.2) * 3.5)))
         
-        if (vb_dir > 5.73 or vb_ind > 5.73):
-            score_3 += 5
+        if vb_dir > 5.73:
+            gap_dir_score += 5
+        else:
+            gap_dir_score += min(0, 5.73 - vb_dir)
+         
+        if vb_ind > 5.73:
+            gap_ind_score += 5
+        else:
+            gap_ind_score += min(0, 5.73 - vb_dir)
+             
+        if cb_dir < 4.5:
+            gap_dir_score += 5
+        else:
+            gap_dir_score += min(0, cb_dir - 4.5)
         
-        if (cb_dir < 4.5 or cb_ind < 4.5):
-            score_3 += 5
+        if cb_ind < 4.5:
+            gap_ind_score += 5
+        else:
+            gap_ind_score += min(0, cb_ind - 4.5)
         
-        return score_1 + score_2 + score_3
+        return max(gap_ind_score, gap_dir_score) + stab_score
 
 
 def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
-        score = 0
+        stab_score = 0
+        gap_dir_score = 0
+        gap_ind_score = 0
         
-        if (gap_dir >= 1.5 and gap_dir <= 3) or (gap_ind >= 1.5 and gap_ind <= 3):
-            score += 10
+        if (gap_dir >= 1.5 and gap_dir <= 3):
+            gap_dir_score += 10
+            
+        if (gap_ind >= 1.5 and gap_ind <= 3):
+            gap_ind_score += 10
 
         if heat_of_formation < 0.5:
-            score += 5
+            stab_score += 5
                     
         if heat_of_formation < 0.2:
-            score += 5
+            stab_score += 5
         
-        if (vb_dir > 5.73 and cb_dir < 4.5) or (vb_ind > 5.73 and cb_ind < 4.5):
-            score += 10
+        if (vb_dir > 5.73 and cb_dir < 4.5):
+            gap_dir_score += 10
         
-        return score
+        if (vb_ind > 5.73 and cb_ind < 4.5):
+            gap_ind_score += 10
+        
+        return max(gap_ind_score, gap_dir_score) + stab_score
 
 
-def gaussian_pdf(x, mean=0):
-    return (1/math.sqrt(2*math.pi))*math.exp(-0.5*(x-mean)*(x-mean))
+
     
 
 if __name__ == "__main__":
