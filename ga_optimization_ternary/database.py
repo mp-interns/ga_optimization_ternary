@@ -23,7 +23,7 @@ import numpy as np
 import os
 import pickle
 
-GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1), (38,32,0), (38,50,0), (38,73,1), (39,73,2), (47,22,4), (47,41,0), (49,72,4), (50,22,0), (55,41,0), (56,31,4), (56,49,4), (56,50,0), (56,73,1), (57,22,1), (57,73,2), (82,31,4)]
+GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1), (38,32,0), (38,50,0), (38,73,1), (39,73,2), (47,41,0), (49,72,4), (50,22,0), (55,41,0), (56,31,4), (56,49,4), (56,50,0), (56,73,1), (57,22,1), (57,73,2), (82,31,4)]
 MAX_GOOD_LS = len(GOOD_CANDS_LS)
 NUM_CANDS = 18928
 
@@ -184,19 +184,18 @@ class Stats_Database():
                 
         
 if __name__ == "__main__":
-    s_db = Stats_Database()
-    s_db.process_stats_new()
-    """
+    #s_db = Stats_Database()
+    #s_db.process_stats_new()
+    
     m_db = M_Database()
-    from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple
+    from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
     hits = 0
     for A in m_db._all_data:
         for B in m_db._all_data[A]:
             for anion in m_db._all_data[A][B]:
                 data = m_db._all_data[A][B][anion]
-                if eval_fitness_simple(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
+                if eval_fitness_complex(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
                     print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),",
                     hits +=1
     
     print hits
-    """

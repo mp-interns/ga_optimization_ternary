@@ -99,22 +99,22 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         else:
             stab_score = 20 * (1-1/(1+math.exp(((-heat_of_formation) + 0.2) * 3.5)))
         
-        if vb_dir > 5.73:
+        if vb_dir >= 5.73:
             gap_dir_score += 5
         else:
             gap_dir_score += min(0, 5.73 - vb_dir)
          
-        if vb_ind > 5.73:
+        if vb_ind >= 5.73:
             gap_ind_score += 5
         else:
             gap_ind_score += min(0, 5.73 - vb_dir)
              
-        if cb_dir < 4.5:
+        if cb_dir <= 4.5:
             gap_dir_score += 5
         else:
             gap_dir_score += min(0, cb_dir - 4.5)
         
-        if cb_ind < 4.5:
+        if cb_ind <= 4.5:
             gap_ind_score += 5
         else:
             gap_ind_score += min(0, cb_ind - 4.5)
@@ -133,23 +133,20 @@ def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_
         if (gap_ind >= 1.5 and gap_ind <= 3):
             gap_ind_score += 10
 
-        if heat_of_formation < 0.5:
+        if heat_of_formation <= 0.5:
             stab_score += 5
                     
-        if heat_of_formation < 0.2:
+        if heat_of_formation <= 0.2:
             stab_score += 5
         
-        if (vb_dir > 5.73 and cb_dir < 4.5):
+        if (vb_dir >= 5.73 and cb_dir <= 4.5):
             gap_dir_score += 10
         
-        if (vb_ind > 5.73 and cb_ind < 4.5):
+        if (vb_ind >= 5.73 and cb_ind <= 4.5):
             gap_ind_score += 10
         
         return max(gap_ind_score, gap_dir_score) + stab_score
 
-
-
-    
 
 if __name__ == "__main__":
     print eval_fitness_complex(3.01, 3.01, 0.5, 1, 1, 2, 2)
