@@ -7,8 +7,10 @@ Created on Mar 14, 2012
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
 from test.test_descrtut import defaultdict
 from collections import OrderedDict
-from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS
-
+from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS,\
+    InitializationDB
+from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill
+    
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
 __version__ = "0.1"
@@ -16,7 +18,7 @@ __maintainer__ = "Anubhav Jain"
 __email__ = "ajain@lbl.gov"
 __date__ = "Mar 14, 2012"
 
-from pyevolve import G1DList, Mutators, Initializators, GAllele
+from pyevolve import G1DList, Mutators, Initializators, GAllele, Consts
 from pyevolve import GSimpleGA
 from pyevolve import Selectors
 from pyevolve import Statistics, Crossovers
@@ -27,10 +29,21 @@ from scipy.interpolate import interp1d
 
 import multiprocessing
 import math
+import copy
 
+
+"""
+def transform_list(my_list):
+    fe = FitnessEvaluator(None, None)
+    t1 = [[a[0], a[2], a[1]] for a in my_list]
+    t2 = [fe.convert_Z_to_raw(x) for x in t1]
+    return [[a[0], a[2], a[1]] for a in t2]
+"""
+    
 class AllFound():
     ALL_FOUND = False
-                
+    # initialization_dict = {"goldschmidt_halffill": transform_list(get_ranked_list_goldschmidt_halffill()), "awesome_list":transform_list(GOOD_CANDS_LS)}
+
 
 def AllFoundCriteria(ga_engine):
     """ Terminate the evolution based on the raw stats
@@ -39,7 +52,7 @@ def AllFoundCriteria(ga_engine):
 
 class ParameterSet():
     
-    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool):
+    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool, initialization):
         self.crossover_fnc = crossover_fnc
         self.fitness_fnc = fitness_fnc
         self.fitness_temp = fitness_temp
@@ -48,9 +61,11 @@ class ParameterSet():
         self.mutation_fnc = mutation_fnc
         self.mutation_rate = mutation_rate
         self.tournament_rate = tournament_rate
+        self.initialization = initialization
         self.initialization_fnc = initialization_fnc
         self.elitism_num = elitism_num
         self.niching_bool = niching_bool
+        
     
     def to_dict(self):
         d = OrderedDict()
@@ -61,7 +76,9 @@ class ParameterSet():
         d['mutation_fnc'] = self.mutation_fnc.__name__
         d['mutation_rate'] = self.mutation_rate
         d['tournament_rate'] = self.tournament_rate
+        d['selection_overall'] = self.selection_fnc.__name__ + "-" + str(self.tournament_rate) + "-" + str(self.fitness_temp)
         d['initialization_fnc'] = self.initialization_fnc.__name__
+        d['initialization'] = self.initialization
         d['popsize'] = self.popsize
         d['elitism_num'] = self.elitism_num
         d['niching'] = self.niching_bool
@@ -95,7 +112,7 @@ class StatTrack():
         self.generation_ngood.append(len(self._candidates_good))
         if len(self._candidates_good) == MAX_GOOD_LS:
             AllFound.ALL_FOUND = True
-            
+        
         return self.generation_ncandidates[-1] - self.generation_ncandidates[-2]
         
     def evolve_callback(self, ga):
@@ -109,18 +126,27 @@ class StatTrack():
         else:
             ga.setMutationRate(self.mutation_rate)
             self.num_breakouts += 1
-            
-        #if ga.currentGeneration == 0:
-            '''
-            print 'YAY'
+        
+        """
+        if ga.currentGeneration == 0:
             pop = ga.getPopulation()
-            for p in pop:
-                print p.__class__
-            # CHANGE THE ENTIRE POPULATION "pop"
-            #pop[i].genomeList = [random.random(), 0 for i in xrange(chromosome/2)]
-            #newPop.evaluate()
-            #newPop.sort()
-            '''
+            
+            
+            for idx, p in enumerate(pop):
+                print 'yay'
+                if idx < len(self.initialization[1]):
+                    raw_list = self._fitness_evaluator.convert_Z_to_raw(self.initialization[1][idx])
+                    p.genomeList = [raw_list[0], raw_list[2], raw_list[1]]
+            
+            pop = ga.getPopulation()
+                
+            pop.evaluate()
+            pop.sort()
+        """ 
+            
+            
+
+             
         return False
         
     
@@ -128,7 +154,7 @@ class StatTrack():
         return interp1d(self.generation_ncandidates, self.generation_ngood)
 
 
-def run_simulation(pset, max_generations):
+def run_simulation(pset, max_generations, initial_list=None):
     # Genome instance
     setOfAlleles = GAllele.GAlleles()
     setOfAlleles.add(GAllele.GAlleleRange(0, 51))
@@ -142,6 +168,7 @@ def run_simulation(pset, max_generations):
     #Fitness function
     
     fe = FitnessEvaluator(pset.fitness_fnc, pset.fitness_temp)
+    Consts.CDefScaleLinearMultiplier = pset.fitness_temp
     
     st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate)
     
@@ -151,7 +178,7 @@ def run_simulation(pset, max_generations):
     genome.initializator.set(pset.initialization_fnc)
 
     ga = GSimpleGA.GSimpleGA(genome)
-
+    
     ga.selector.set(pset.selection_fnc)
     ga.terminationCriteria.set(AllFoundCriteria)
     ga.stepCallback.set(st.evolve_callback)
@@ -163,32 +190,32 @@ def run_simulation(pset, max_generations):
         ga.setElitismReplacement((int)(math.ceil(pset.elitism_num * pset.popsize)))
     else:
         ga.setElitism(False)
-        
-    ga.setMutationRate(pset.mutation_rate)
     
+    ga.setMutationRate(pset.mutation_rate)
     # TODO: figure out niching
-    ga.evolve()
+    stats_freq = 0
+    ga.evolve(freq_stats=stats_freq, initial_list=initial_list)
     
     return st
-    
 
 def main_loop():
     ncores = 7
-    clear = False
+    clear = True
     # clear the Stats DB
     db = Stats_Database(clear=clear)
-    popsizes = [16, 100, 500, 1000]  #TODO: add 250 and 2000 later, if it is needed based on the data
+    popsizes = [16, 100, 500, 1000]  
     fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
-    fitness_temps = [5, 25, 50]  # TODO: replace by LinearScalingConst, only use for RouletteWheel selector
+    fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
-    selection_fncs = [Selectors.GTournamentSelectorAlternative, Selectors.GRouletteWheel, Selectors.GUniformSelector]
+    selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05, 0.1, 0.5]
-    mutation_rates = [0.01, 0.1, 0.25]
+    tournament_rates = [0.05, 0.1, 0.25, 0.5]
+    mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5]
     nichings = [False]  # TODO: implement True
-    initialization_fncs = [Initializators.G1DListInitializatorAllele]  # TODO: add data-mined initializors
-    
+    initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
+    initializations = ["goldschmidt_halffill", "awesome_list"]
+
     all_ps = []
     for popsize in popsizes:
         for fitness_fnc in fitness_fncs:
@@ -198,21 +225,26 @@ def main_loop():
                         for elitism in elitisms:
                             for niching in nichings:
                                 for initialization_fnc in initialization_fncs:
-                                    for m_rate in mutation_rates:
-                                        for fitness_temp in fitness_temps:
-                                            for tournament_rate in tournament_rates:
-                                                if (tournament_rate == tournament_rates[0] or selection_fnc == selection_fncs[0]):
-                                                    all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching))  # set up the parameters
+                                    for initialization in initializations:
+                                        for m_rate in mutation_rates:
+                                            for fitness_temp in fitness_temps:
+                                                #fitness temp only matters for roulette wheel
+                                                if (fitness_temp == fitness_temps[0] or selection_fnc.__name__ == "GRouletteWheel"):
+                                                    for tournament_rate in tournament_rates:
+                                                        if (tournament_rate == tournament_rates[0] or selection_fnc.__name__ == "GTournamentSelectorAlternative"):
+                                                            all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching, initialization))  # set up the parameters
 
     print 'the number of parameter sets is', len(all_ps)
-    process_parallel(all_ps, ncores)
-    # process_serial(all_ps)
+    #process_parallel(all_ps, ncores)
+    process_serial(all_ps)
+
 
     
 def process_parameterset(ps):
-    num_iterations = 15
+    num_iterations = 1
     production = True
     max_generations = 20000  # should always work...(hopefully)
+    i_db = InitializationDB()
     
     if production:
         db = Stats_Database(clear=False)
@@ -220,7 +252,7 @@ def process_parameterset(ps):
             db._stats_raw.remove({"unique_key": ps.unique_key()}, safe=True)
             for iteration in range(num_iterations):
                 AllFound.ALL_FOUND = False  # reset the simulation
-                stat = run_simulation(ps, max_generations)
+                stat = run_simulation(ps, max_generations, initial_list=i_db.get_initial_list(iteration))
                 print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
                 if production:
                     db.add_stat_raw(ps, stat, iteration)

@@ -7,7 +7,6 @@ from ga_optimization_ternary.fitness_evaluators import FitnessEvaluator,\
     eval_fitness_simple
 from pymatgen.core.periodic_table import Element
 import math
-from ga_optimization_ternary.simple_ga import StatTrack
 import pickle
 import os
 from ga_optimization_ternary.database import GOOD_CANDS_LS
@@ -212,6 +211,7 @@ def get_stats(ranked_list):
     return (num_good, num_cands)
         
 if __name__ == "__main__":
-    a, b = get_stats(get_ranked_list_goldschmidt_halffill())
+    a = get_ranked_list_goldschmidt_halffill()
+    #a, b = get_stats(get_ranked_list_goldschmidt_halffill())
     print a
-    print b
+    #print b

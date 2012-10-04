@@ -27,6 +27,7 @@ GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1)
 MAX_GOOD_LS = len(GOOD_CANDS_LS)
 NUM_CANDS = 18928
 
+
 class M_Database():
     
     def __init__(self):
@@ -181,8 +182,18 @@ class Stats_Database():
             
             print doc
             self._stats_process.insert(doc)
+
                 
-        
+class InitializationDB():
+    def __init__(self):
+        filename = "random_initializations.p"
+        with open(filename) as f:
+            self.random_inits = pickle.load(f)
+    
+    def get_initial_list(self, iteration):
+        return self.random_inits[iteration]
+
+    
 if __name__ == "__main__":
     #s_db = Stats_Database()
     #s_db.process_stats_new()
