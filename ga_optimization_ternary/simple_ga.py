@@ -4,8 +4,14 @@ from __future__ import division
 '''
 Created on Mar 14, 2012
 '''
+
+"""
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logging.warning('Logging enabled')
+"""
+
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
-from test.test_descrtut import defaultdict
 from collections import OrderedDict
 from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS,\
     InitializationDB
@@ -119,12 +125,14 @@ class StatTrack():
         ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         
-        breakout_cutoff = (int)(math.ceil(0.15 * len(ga.getPopulation().internalPop)))
+        breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
         #breakout_cutoff = 10
         if cands_added < breakout_cutoff:
             ga.setMutationRate(0.5)
+            ga.setCrossoverRate(1.0)
         else:
             ga.setMutationRate(self.mutation_rate)
+            ga.setCrossoverRate(0.9)
             self.num_breakouts += 1
         
         """
@@ -203,18 +211,18 @@ def main_loop():
     clear = True
     # clear the Stats DB
     db = Stats_Database(clear=clear)
-    popsizes = [16, 100, 500, 1000]  
+    popsizes = [20, 100, 500, 1000]
     fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
     fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05, 0.1, 0.25, 0.5]
+    tournament_rates = [0.05, 0.1, 0.25]
     mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5]
     nichings = [False]  # TODO: implement True
     initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
-    initializations = ["goldschmidt_halffill", "awesome_list"]
+    initializations = ["none"]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
 
     all_ps = []
     for popsize in popsizes:
