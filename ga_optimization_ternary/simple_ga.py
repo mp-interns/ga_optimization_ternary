@@ -244,7 +244,7 @@ def main_loop():
                                                         if (tournament_rate == tournament_rates[0] or selection_fnc.__name__ == "GTournamentSelectorAlternative"):
                                                                 ps = ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching, initialization)
                                                                 if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
-                                                                    all_ps.append()  # set up the parameters
+                                                                    all_ps.append(ps)  # set up the parameters
                                                                 else:
                                                                     print "We already have pset:", ps.unique_key()
 
