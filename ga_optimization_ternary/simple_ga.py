@@ -38,6 +38,8 @@ import math
 import copy
 
 
+NUM_ITERATIONS = 10
+
 """
 def transform_list(my_list):
     fe = FitnessEvaluator(None, None)
@@ -208,7 +210,7 @@ def run_simulation(pset, max_generations, initial_list=None):
 
 def main_loop():
     ncores = 7
-    clear = True
+    clear = False
     # clear the Stats DB
     db = Stats_Database(clear=clear)
     popsizes = [20, 100, 500, 1000]
@@ -240,36 +242,35 @@ def main_loop():
                                                 if (fitness_temp == fitness_temps[0] or selection_fnc.__name__ == "GRouletteWheel"):
                                                     for tournament_rate in tournament_rates:
                                                         if (tournament_rate == tournament_rates[0] or selection_fnc.__name__ == "GTournamentSelectorAlternative"):
-                                                            all_ps.append(ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching, initialization))  # set up the parameters
+                                                                ps = ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching, initialization)
+                                                                if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
+                                                                    all_ps.append()  # set up the parameters
+                                                                else:
+                                                                    print "We already have pset:", ps.unique_key()
 
     print 'the number of parameter sets is', len(all_ps)
-    #process_parallel(all_ps, ncores)
-    process_serial(all_ps)
-
+    process_parallel(all_ps, ncores)
+    #process_serial(all_ps)
 
     
 def process_parameterset(ps):
-    num_iterations = 1
     production = True
     max_generations = 20000  # should always work...(hopefully)
     i_db = InitializationDB()
-    
+    iteration = 0
     if production:
         db = Stats_Database(clear=False)
-        if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= num_iterations:
-            db._stats_raw.remove({"unique_key": ps.unique_key()}, safe=True)
-            for iteration in range(num_iterations):
+        if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
+            iteration = db._stats_raw.find({"unique_key": ps.unique_key()}).count()
+            while iteration < NUM_ITERATIONS:
                 AllFound.ALL_FOUND = False  # reset the simulation
                 stat = run_simulation(ps, max_generations, initial_list=i_db.get_initial_list(iteration))
                 print stat.generation_ncandidates[-1], len(stat.generation_ngood), stat.num_breakouts, ps.to_dict(), ps.unique_key()
                 if production:
                     db.add_stat_raw(ps, stat, iteration)
+                iteration += 1
         else:
             print 'SKIPPING KEY' + ps.unique_key()
-        # stats.append(stat)
-    
-    #if production:
-    #    db.add_stats_raw(ps, stats)
     
     return 0
 
