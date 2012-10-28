@@ -102,22 +102,26 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         if vb_dir >= 5.73:
             gap_dir_score += 5
         else:
-            gap_dir_score += max(0, 5 - ((5.73 - vb_dir) * 5))
+            distance = (5.73 - vb_dir) * 5
+            gap_dir_score += 10 * (1-1/(1+math.exp(-distance)))
          
         if vb_ind >= 5.73:
             gap_ind_score += 5
         else:
-            gap_ind_score += max(0, 5 - ((5.73 - vb_ind) * 5))
+            distance = (5.73 - vb_ind) * 5
+            gap_dir_score += 10 * (1-1/(1+math.exp(-distance)))
              
         if cb_dir <= 4.5:
             gap_dir_score += 5
         else:
-            gap_dir_score += max(0, 5 - ((cb_dir - 4.5) * 5))
+            distance = (cb_dir - 4.5) * 5
+            gap_dir_score += 10 * (1-1/(1+math.exp(-distance)))
         
         if cb_ind <= 4.5:
             gap_ind_score += 5
         else:
-            gap_ind_score += max(0, 5 - ((cb_ind - 4.5) * 5))
+            distance = (cb_ind - 4.5) * 5
+            gap_ind_score += 10 * (1-1/(1+math.exp(-distance)))
         
         return max(gap_ind_score, gap_dir_score) + stab_score
 
