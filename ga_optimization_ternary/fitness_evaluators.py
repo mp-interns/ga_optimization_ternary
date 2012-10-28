@@ -87,12 +87,12 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         if (gap_dir >= 1.5 and gap_dir <= 3):
             gap_dir_score += 10
         else:
-            gap_dir_score += gaussian_pdf(gap_dir, 2.25)
+            gap_dir_score += 33 * gaussian_pdf(gap_dir, 2.25)
             
         if (gap_ind >= 1.5 and gap_ind <= 3):
             gap_ind_score += 10
         else:
-            gap_ind_score += gaussian_pdf(gap_ind, 2.25)
+            gap_ind_score += 33 * gaussian_pdf(gap_ind, 2.25)
             
         if heat_of_formation <= 0.2:
             stab_score = 10
@@ -102,22 +102,22 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         if vb_dir >= 5.73:
             gap_dir_score += 5
         else:
-            gap_dir_score += min(0, 5.73 - vb_dir)
+            gap_dir_score += max(0, 5 - ((5.73 - vb_dir) * 5))
          
         if vb_ind >= 5.73:
             gap_ind_score += 5
         else:
-            gap_ind_score += min(0, 5.73 - vb_dir)
+            gap_ind_score += max(0, 5 - ((5.73 - vb_ind) * 5))
              
         if cb_dir <= 4.5:
             gap_dir_score += 5
         else:
-            gap_dir_score += min(0, cb_dir - 4.5)
+            gap_dir_score += max(0, 5 - ((cb_dir - 4.5) * 5))
         
         if cb_ind <= 4.5:
             gap_ind_score += 5
         else:
-            gap_ind_score += min(0, cb_ind - 4.5)
+            gap_ind_score += max(0, 5 - ((cb_ind - 4.5) * 5))
         
         return max(gap_ind_score, gap_dir_score) + stab_score
 
@@ -139,17 +139,29 @@ def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_
         if heat_of_formation <= 0.2:
             stab_score += 5
         
-        if (vb_dir >= 5.73 and cb_dir <= 4.5):
-            gap_dir_score += 10
+        if (vb_dir >= 5.73):
+            gap_dir_score += 5
         
-        if (vb_ind >= 5.73 and cb_ind <= 4.5):
-            gap_ind_score += 10
-        
+        if (cb_dir <= 4.5):
+            gap_dir_score += 5
+            
+        if (vb_ind >= 5.73):
+            gap_ind_score += 5
+            
+        if (cb_ind <= 4.5):
+            gap_ind_score += 5
+            
         return max(gap_ind_score, gap_dir_score) + stab_score
 
+def score (cb_dir):
+        if cb_dir <= 4.5:
+            return 5
+        else:
+            return max(0, 5 - (cb_dir - 4.5))
 
 if __name__ == "__main__":
-    print eval_fitness_complex(3.01, 3.01, 0.5, 1, 1, 2, 2)
+    print score(4.8)
+    #print eval_fitness_complex(3.01, 3.01, 0.5, 1, 1, 2, 2)
     # print gaussian_pdf(gap_ind, 2.25) * 33
     #fe = FitnessEvaluator()
     #print fe.array_to_score((49,41,20))
