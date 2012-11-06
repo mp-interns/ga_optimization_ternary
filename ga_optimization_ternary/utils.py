@@ -40,8 +40,7 @@ def _get_prob(k, M, n):
 """
 
 def get_reference_array():
-    raise NotImplementedError()
-    return [0, 823.0, 1646.0, 2469.0, 3292.0, 4115.0, 4938.0, 5761.0, 6584.0, 7407.0, 8230.0, 9053.0, 9876.0, 10699.0, 11522.0, 12345.0, 13168.0, 13991.0, 14814.0, 15637.0, 16460.0, 17283.0, 18106.0]
+    return [0.0, 901.380952381, 1802.76190476, 2704.14285714, 3605.52380952, 4506.9047619, 5408.28571429, 6309.66666667, 7211.04761905, 8112.42857143, 9013.80952381, 9915.19047619, 10816.5714286, 11717.952381, 12619.3333333, 13520.7142857, 14422.0952381, 15323.4761905, 16224.8571429, 17126.2380952, 18027.6190476]
 
 """
 def _get_prob_bailey(JC, CC, JJ):
@@ -49,6 +48,11 @@ def _get_prob_bailey(JC, CC, JJ):
     
     print a
 """
+
+
+def _get_prob(k, M, n):
+    return n*(M+1)/(k+1)
+
 
 def get_random_genomes():
     
@@ -80,9 +84,6 @@ def get_random_genomes():
     # dump the data
     with open(filename, "wb") as f:
         pickle.dump(r_init, f)
-
-    
-    
         
 if __name__ == "__main__":
-    print get_random_genomes()
+    print get_reference_array()[20]
