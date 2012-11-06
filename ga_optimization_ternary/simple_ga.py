@@ -11,11 +11,13 @@ logging.basicConfig(level=logging.DEBUG)
 logging.warning('Logging enabled')
 """
 
-from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
+from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex,\
+    eval_fitness_simple_exclusion
 from collections import OrderedDict
 from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS,\
     InitializationDB
-from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill
+from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill,\
+    get_excluded_list
     
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -60,7 +62,7 @@ def AllFoundCriteria(ga_engine):
 
 class ParameterSet():
     
-    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool, initialization):
+    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool, initialization, include_ridiculous=False):
         self.crossover_fnc = crossover_fnc
         self.fitness_fnc = fitness_fnc
         self.fitness_temp = fitness_temp
@@ -73,8 +75,8 @@ class ParameterSet():
         self.initialization_fnc = initialization_fnc
         self.elitism_num = elitism_num
         self.niching_bool = niching_bool
+        self.include_ridiculous = include_ridiculous
         
-    
     def to_dict(self):
         d = OrderedDict()
         d['crossover_fnc'] = self.crossover_fnc.__name__
@@ -90,6 +92,7 @@ class ParameterSet():
         d['popsize'] = self.popsize
         d['elitism_num'] = self.elitism_num
         d['niching'] = self.niching_bool
+        d['include_ridiculous'] = self.include_ridiculous
         return d
     
     def unique_key(self):
@@ -98,7 +101,7 @@ class ParameterSet():
 
 class StatTrack():
     
-    def __init__(self, fe, mutation_rate, tournament_rate):
+    def __init__(self, fe, mutation_rate, tournament_rate, include_ridiculous=True):
         self._candidates_tried = set()
         self._candidates_good = set()
         self.generation_ncandidates = [0]
@@ -107,11 +110,13 @@ class StatTrack():
         self.num_breakouts = 0
         self.mutation_rate = mutation_rate
         self.tournament_rate = tournament_rate
+        self.include_ridiculous = include_ridiculous
     
     def updateStats(self, generation_num, population):
         for i in population:
             cand = self._fitness_evaluator.convert_raw_to_Z((i[0], i[1], i[2]))
-            self._candidates_tried.add(cand)
+            if self.include_ridiculous or cand not in get_excluded_list():
+                self._candidates_tried.add(cand)
             
             if cand in GOOD_CANDS_LS:
                 self._candidates_good.add(cand)
@@ -128,42 +133,19 @@ class StatTrack():
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
-        #breakout_cutoff = 10
         if cands_added < breakout_cutoff:
             ga.setMutationRate(0.5)
             ga.setCrossoverRate(1.0)
+            print 'NOT MUTATING'
         else:
             ga.setMutationRate(self.mutation_rate)
             ga.setCrossoverRate(0.9)
             self.num_breakouts += 1
+            print 'MUTATING'
         
-        """
-        if ga.currentGeneration == 0:
-            pop = ga.getPopulation()
-            
-            
-            for idx, p in enumerate(pop):
-                print 'yay'
-                if idx < len(self.initialization[1]):
-                    raw_list = self._fitness_evaluator.convert_Z_to_raw(self.initialization[1][idx])
-                    p.genomeList = [raw_list[0], raw_list[2], raw_list[1]]
-            
-            pop = ga.getPopulation()
-                
-            pop.evaluate()
-            pop.sort()
-        """ 
-            
-            
-
-             
         return False
         
     
-    def get_interpolation_function(self):
-        return interp1d(self.generation_ncandidates, self.generation_ngood)
-
-
 def run_simulation(pset, max_generations, initial_list=None):
     # Genome instance
     setOfAlleles = GAllele.GAlleles()
@@ -180,7 +162,7 @@ def run_simulation(pset, max_generations, initial_list=None):
     fe = FitnessEvaluator(pset.fitness_fnc, pset.fitness_temp)
     Consts.CDefScaleLinearMultiplier = pset.fitness_temp
     
-    st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate)
+    st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate, include_ridiculous=pset.include_ridiculous)
     
     genome.crossover.set(pset.crossover_fnc)
     genome.mutator.set(pset.mutation_fnc)
@@ -252,14 +234,62 @@ def main_loop():
     process_parallel(all_ps, ncores)
     #process_serial(all_ps)
 
-    
+
+def main_loop_exclusions():
+    ncores = 2
+    clear = False
+    # clear the Stats DB
+    db = Stats_Database(clear=clear, extension="_exclusion")
+    popsizes = [100]
+    fitness_fncs = [eval_fitness_simple_exclusion]
+    fitness_temps = [2.5]
+    crossover_fncs = [Crossovers.G1DListCrossoverUniform]
+    selection_fncs = [Selectors.GRouletteWheel]
+    mutator_fncs = [Mutators.G1DListMutatorAllele]
+    tournament_rates = [0.05]
+    mutation_rates = [0.1]
+    elitisms = [0.5]
+    nichings = [False]  # TODO: implement True
+    initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
+    initializations = ["none"]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
+
+    all_ps = []
+    for popsize in popsizes:
+        for fitness_fnc in fitness_fncs:
+            for crossover_fnc in crossover_fncs:
+                for selection_fnc in selection_fncs:
+                    for mutator_fnc in mutator_fncs:
+                        for elitism in elitisms:
+                            for niching in nichings:
+                                for initialization_fnc in initialization_fncs:
+                                    for initialization in initializations:
+                                        for m_rate in mutation_rates:
+                                            for fitness_temp in fitness_temps:
+                                                #fitness temp only matters for roulette wheel
+                                                if (fitness_temp == fitness_temps[0] or selection_fnc.__name__ == "GRouletteWheel"):
+                                                    for tournament_rate in tournament_rates:
+                                                        if (tournament_rate == tournament_rates[0] or selection_fnc.__name__ == "GTournamentSelectorAlternative"):
+                                                                ps = ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching, initialization, include_ridiculous=False)
+                                                                if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
+                                                                    all_ps.append(ps)  # set up the parameters
+                                                                else:
+                                                                    print "We already have pset:", ps.unique_key()
+
+    print 'the number of parameter sets is', len(all_ps)
+    process_serial(all_ps)
+    #process_parallel(all_ps, ncores)
+
+
 def process_parameterset(ps):
     production = True
     max_generations = 20000  # should always work...(hopefully)
     i_db = InitializationDB()
     iteration = 0
+    extension = ""
+    if not ps.include_ridiculous:
+        extension = "_exclusion" 
     if production:
-        db = Stats_Database(clear=False)
+        db = Stats_Database(clear=False, extension=extension)
         if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
             iteration = db._stats_raw.find({"unique_key": ps.unique_key()}).count()
             while iteration < NUM_ITERATIONS:
@@ -287,4 +317,4 @@ def process_serial(all_ps):
         process_parameterset(ps)
 
 if __name__ == "__main__":
-    main_loop()
+    main_loop_exclusions()

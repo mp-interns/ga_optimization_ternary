@@ -55,10 +55,10 @@ class M_Database():
     
 
 class Stats_Database():
-    def __init__(self, clear=False):
+    def __init__(self, clear=False, extension=""):
         connection = pymongo.Connection('localhost', 12345)
-        self._stats_raw = connection.unc.stats_raw
-        self._stats_process = connection.unc.stats_process
+        self._stats_raw = connection.unc["stats_raw" + extension]
+        self._stats_process = connection.unc["stats_process" + extension]
         if clear:
             self._stats_raw.remove()
             self._stats_process.remove()
@@ -79,22 +79,6 @@ class Stats_Database():
                 
         self._stats_raw.insert(doc)
     
-    '''
-    def add_stats_raw(self, ps, stats):
-        doc = {}
-        doc['unique_key'] = ps.unique_key()
-        doc['parameters'] = ps.to_dict()
-        doc['iterations'] = []
-        for stat in stats:
-            it_data = []
-            for gen in range(len(stat.generation_ngood)):
-                it_data.append({"n_cand":stat.generation_ncandidates[gen], "n_good":stat.generation_ngood[gen]})
-            doc['iterations'].append(it_data)
-            doc['num_breakouts'] = stat.num_breakouts
-                
-        self._stats_raw.insert(doc)
-    '''
-        
     def process_stats_new(self):
         num_iterations = 15
         for key in self._stats_raw.distinct("unique_key"):
