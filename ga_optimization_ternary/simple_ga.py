@@ -126,6 +126,7 @@ class StatTrack():
         if len(self._candidates_good) == MAX_GOOD_LS:
             AllFound.ALL_FOUND = True
         
+        print self.generation_ncandidates[-1], self.generation_ngood[-1]
         return self.generation_ncandidates[-1] - self.generation_ncandidates[-2]
         
     def evolve_callback(self, ga):
@@ -133,15 +134,16 @@ class StatTrack():
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
+        print cands_added, 'is number of cands added', breakout_cutoff
         if cands_added < breakout_cutoff:
             ga.setMutationRate(0.5)
             ga.setCrossoverRate(1.0)
-            print 'NOT MUTATING'
+            print 'MUTATING'
         else:
             ga.setMutationRate(self.mutation_rate)
             ga.setCrossoverRate(0.9)
             self.num_breakouts += 1
-            print 'MUTATING'
+            print 'NOT MUTATING'
         
         return False
         
