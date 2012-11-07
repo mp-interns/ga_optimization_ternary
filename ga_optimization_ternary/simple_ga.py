@@ -134,12 +134,12 @@ class StatTrack():
         
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
         if cands_added < breakout_cutoff:
-            ga.setMutationRate(0.5)
+            ga.setMutationRate(1.0)
             ga.setCrossoverRate(1.0)
+            self.num_breakouts += 1
         else:
             ga.setMutationRate(self.mutation_rate)
             ga.setCrossoverRate(0.9)
-            self.num_breakouts += 1
         
         return False
         
