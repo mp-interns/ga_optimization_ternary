@@ -3,6 +3,7 @@
 '''
 Created on Mar 14, 2012
 '''
+from ga_optimization_ternary.ranked_list_optimization import get_excluded_list
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -31,10 +32,21 @@ class FitnessEvaluator():
         self._db = M_Database()
         self._fitness = fitness
         self._temp = temperature
+        self._exclusions = get_excluded_list()
 
     def array_to_score(self, genome):
         genome = self.convert_raw_to_Z(genome)
         gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind = self._db.get_data(genome[0], genome[1], genome[2])
+        if self._fitness.__name__ == "eval_fitness_simple_exclusion":
+            if genome in self._exclusions:
+                return 0
+            return eval_fitness_simple(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)
+        
+        if self._fitness.__name__ == "eval_fitness_complex_exclusion":
+            if genome in self._exclusions:
+                return 0
+            return eval_fitness_complex(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)     
+            
         raw_fit = self._fitness(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)
         # scaled_fit = math.exp(raw_fit/self._temp)
         return raw_fit
@@ -156,6 +168,12 @@ def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_
             gap_ind_score += 5
             
         return max(gap_ind_score, gap_dir_score) + stab_score
+
+def eval_fitness_simple_exclusion():
+    pass
+
+def eval_fitness_complex_exclusion():
+    pass
 
 def score (cb_dir):
         if cb_dir <= 4.5:

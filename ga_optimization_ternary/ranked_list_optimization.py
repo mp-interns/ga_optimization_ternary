@@ -3,8 +3,7 @@ from __future__ import division
 '''
 Created on Jul 23, 2012
 '''
-from ga_optimization_ternary.fitness_evaluators import FitnessEvaluator,\
-    eval_fitness_simple
+
 from pymatgen.core.periodic_table import Element
 import math
 import pickle
@@ -18,7 +17,7 @@ __maintainer__ = "Anubhav Jain"
 __email__ = "ajain@lbl.gov"
 __date__ = "Jul 23, 2012"
 
-
+"""
 def get_ranked_list_goldschmidt():
     #TODO: get the oxidation state right!!!
     
@@ -102,7 +101,74 @@ def get_ranked_list_goldschmidt_smart():
     with open(filename, "wb") as f:
         pickle.dump(results, f)
     return results
+"""
 
+def get_excluded_list():
+    
+    filename = "excluded_compounds.p"
+    if os.path.exists(filename):
+        with open(filename) as f:
+            return pickle.load(f)
+    
+    from ga_optimization_ternary.fitness_evaluators import FitnessEvaluator, eval_fitness_simple
+    all_AB = FitnessEvaluator(eval_fitness_simple, 10)._reverse_dict.keys()
+    print 'generating exclusion ranks...'
+    exclusions = []
+    
+    for a in all_AB:
+        for b in all_AB:
+            for x in range(7):
+                
+                #nelectrons must be even
+                ne_a = Element.from_Z(a).Z
+                ne_b = Element.from_Z(b).Z
+                ne_x = None
+                if x == 0:
+                    ne_x = Element("O").Z * 3
+                elif x == 1:
+                    ne_x = Element("O").Z * 2 + Element("N").Z
+                elif x == 2:
+                    ne_x = Element("O").Z + Element("N").Z * 2
+                elif x == 3:
+                    ne_x = Element("N").Z
+                elif x == 4:
+                    ne_x = Element("O").Z * 2 + Element("F").Z
+                elif x == 5:
+                    ne_x = Element("O").Z + Element("F").Z + Element("N").Z
+                elif x == 6:
+                    ne_x = Element("O").Z * 2 + Element("S").Z
+                
+                #modify the score based on charge-balance
+                even_found = False
+                el_a = Element.from_Z(a)
+                el_b = Element.from_Z(b)
+                val_x = 0
+                if x == 0:
+                    val_x = -2 * 3
+                elif x == 1:
+                    val_x = (-2 * 2) + (-3 * 1)
+                elif x == 2:
+                    val_x = (-2 * 1) + (-3 * 2)
+                elif x == 3:
+                    val_x = -3 * 3
+                elif x == 4:
+                    val_x = (-2 * 2) + (-1 * 1)
+                elif x == 5:
+                    val_x = (-2 * 1) + (-1 * 1) + (-3 * 1)
+                elif x == 6:
+                    val_x = (-2 * 2) + (-2 * 1)
+                
+                for a_oxi in el_a.oxidation_states:
+                    for b_oxi in el_b.oxidation_states:
+                        if (ne_a + ne_b + ne_x) % 2 == 0 and (a_oxi + b_oxi + val_x) == 0:
+                            even_found = True
+                
+                if not even_found:
+                    exclusions.append((a, b, x))
+                
+    with open(filename, "wb") as f:
+        pickle.dump(exclusions, f)
+    return exclusions
 
 def get_ranked_list_goldschmidt_halffill():
     #TODO: get the oxidation state right!!!
@@ -211,7 +277,5 @@ def get_stats(ranked_list):
     return (num_good, num_cands)
         
 if __name__ == "__main__":
-    a = get_ranked_list_goldschmidt_halffill()
-    #a, b = get_stats(get_ranked_list_goldschmidt_halffill())
-    print a
-    #print b
+    a = get_excluded_list()
+    print len(a)

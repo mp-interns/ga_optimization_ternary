@@ -35,13 +35,23 @@ def get_pretty_name(ugly_name):
     d['GRankSelector'] = "Rank"
     d['GTournamentSelectorAlternative'] = "Tourn."
     d['GUniformSelector'] = "Uniform"
-    d['eval_fitness_partial'] = "Partial"
-    d['eval_fitness_simple'] = "All-or-Nothing"
+    d['eval_fitness_partial'] = "Smooth"
+    d['eval_fitness_simple'] = "Discontinuous"
     d['initialization_fnc'] = "Initialization Function"
     d['G1DListInitializatorAllele'] = "Random"
     d['popsize'] = "Population size"
+    d['mutation_rate'] = "Mutation Rate"
     d['elitism_num'] = "Number of Elite"
     d['eval_fitness_complex'] = "Partial"
+    d["GTournamentSelectorAlternative-0.25-1.25"] = "T-0.25"
+    d["GTournamentSelectorAlternative-0.05-1.25"] = "T-0.05"
+    d["GTournamentSelectorAlternative-0.1-1.25"] = "T-0.10"
+    d["GRouletteWheel-0.05-1.25"] = "R-1.25"
+    d["GRouletteWheel-0.05-2.5"] = "R-2.5"
+    d["GRouletteWheel-0.05-5"] = "R-5"
+    d["GRouletteWheel-0.05-10"] = "R-10"
+    d["GRouletteWheel-0.05-20"] = "R-20"
+    d["GUniformSelector-0.05-1.25"] = "U-0"
     return d.get(ugly_name, ugly_name)
 
 class PerformancePlot():
@@ -58,7 +68,8 @@ class PerformancePlot():
         
         self.get_reference_data()  # reference
         self.get_goldschmidt_data()  # goldschmidt reference
-        self.get_data(0, "best GA", "blue", pos="right")  # best
+        self.get_data(0, "best GA (all)", "blue", pos="right", crit="all")  # best
+        self.get_data(0, "best GA (ten)", "green", pos="right", crit="ten")  # best
         self.get_data(num_exps-1, "worst GA", "red", "right")  # ~worst
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
@@ -73,7 +84,7 @@ class PerformancePlot():
         else:
             plt.show()
         
-    def get_data(self, idx, label, color, pos="left", crit="fifteen"):
+    def get_data(self, idx, label, color, pos="left", crit="all"):
         x = []
         y = []
         xerr = []
@@ -175,11 +186,11 @@ class ParametersPlot():
         
         self.fontname = "Trebuchet MS"
         
-        params = ["crossover_fnc", "popsize", "selection_fnc", "tournament_rate", "mutation_rate", "elitism_num", "fitness_fnc", "fitness_temp", "initialization_fnc"]
+        params = ["crossover_fnc", "popsize", "selection_overall", "mutation_rate", "elitism_num", "fitness_fnc"]
         
-        plt.subplot(3, 3, 1)
+        plt.subplot(3, 2, 1)
         for idx, param in enumerate(params):
-            plt.subplot(3, 3, idx+1)
+            plt.subplot(3, 2, idx+1)
             self.get_data(param)
         
         if format:
@@ -192,21 +203,25 @@ class ParametersPlot():
         
         data = []
         labels = self.stats_process.distinct("parameters."+parameter)
-        labels.sort()
+        if "-" not in str(labels[0]):
+            labels.sort()
+        else:
+            labels.sort(key=lambda label: ord(label.split("-")[0][1])*10 + float(label.split("-")[1])+float(label.split("-")[2]))
         for label in labels:
             # get the best
             '''
-            best = self.stats_process.find({"parameters."+parameter:label}, sort=[("fifteen",pymongo.ASCENDING)])[0]
-            data.append(get_reference_array()[15]/best["fifteen"])
+            best = self.stats_process.find({"parameters."+parameter:label}, sort=[("all",pymongo.ASCENDING)])[0]
+            data.append(get_reference_array()[MAX_GOOD_LS]/best["all"])
             '''
-            
             # get the average
             m_sum = 0.0
             npoints = 0.0
-            for item in self.stats_process.find({"parameters." + parameter: label}, {"fifteen": 1}):
-                m_sum = m_sum + get_reference_array()[15] / item["fifteen"]
+            num_to_average = 1000  # average the num_to_average BEST runs
+            for item in self.stats_process.find({"parameters." + parameter: label}, {"ten": 1}, sort=[("ten",pymongo.ASCENDING)]).limit(num_to_average):
+                m_sum = m_sum + get_reference_array()[10] / item["ten"]
                 npoints = npoints + 1
             data.append(m_sum / npoints)
+
         pretty_labels = [get_pretty_name(n) for n in labels]
         xlocations = np.array(range(len(data))) + 0.5
         width = 0.75
@@ -229,9 +244,9 @@ class TenAllPlot():
     def get_data(self):
         x = []
         y = []
-        for data in self.stats_process.find({}, sort = [("ten", pymongo.ASCENDING)]):
-            x.append(data['ten'])
-            y.append(data['all'])
+        for data in self.stats_process.find({}):
+            x.append(get_reference_array()[10]/data['ten'])
+            y.append(get_reference_array()[MAX_GOOD_LS]/data['all'])
         plt.scatter(x, y)
     
 class DataTable():
@@ -251,10 +266,13 @@ if __name__ == "__main__":
     if format:
         PerformancePlot(format=format)
         ComparisonPlot(format=format)
-        #ParametersPlot(format=format)
+        ParametersPlot(format=format)
     
     else:
-        ParametersPlot()
+        TenAllPlot()
+        #PerformancePlot()
+        #ComparisonPlot()
+        # ParametersPlot()
         plt.show()
     
     # DataTable()
