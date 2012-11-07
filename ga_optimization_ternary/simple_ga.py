@@ -62,7 +62,7 @@ def AllFoundCriteria(ga_engine):
 
 class ParameterSet():
     
-    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool, initialization, include_ridiculous=False):
+    def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool, initialization, include_ridiculous=True):
         self.crossover_fnc = crossover_fnc
         self.fitness_fnc = fitness_fnc
         self.fitness_temp = fitness_temp
