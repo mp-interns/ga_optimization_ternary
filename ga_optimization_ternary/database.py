@@ -96,10 +96,8 @@ class Stats_Database():
     '''
         
     def process_stats_new(self):
-        num_iterations = 15
-        for key in self._stats_raw.distinct("unique_key"):
-            
-            #TODO: fix me
+        num_iterations = 10
+        for key in self._stats_raw.distinct("unique_key"):            
             if self._stats_raw.find({"unique_key": key}).count() >= num_iterations:
                 # we have a good param set ... go through the iterations
                 doc = {}
@@ -195,9 +193,9 @@ class InitializationDB():
 
     
 if __name__ == "__main__":
-    #s_db = Stats_Database()
-    #s_db.process_stats_new()
-    
+    s_db = Stats_Database()
+    s_db.process_stats_new()
+    """
     m_db = M_Database()
     from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
     hits = 0
@@ -211,3 +209,4 @@ if __name__ == "__main__":
                     hits +=1
     
     print hits
+    """
