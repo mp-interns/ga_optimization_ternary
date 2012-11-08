@@ -81,11 +81,13 @@ class Stats_Database():
     
     def process_stats_new(self):
         num_iterations = 10
-        for key in self._stats_raw.distinct("unique_key"):            
+        for key in self._stats_raw.distinct("unique_key"):
             if self._stats_raw.find({"unique_key": key}).count() >= num_iterations:
                 # we have a good param set ... go through the iterations
                 doc = {}
                 it_ng_nc = np.zeros((num_iterations, MAX_GOOD_LS + 1))  # [iteration, numgood] = (# candidates needed)
+                
+                breakouts = []
                 
                 for it in range(num_iterations):
                     expt = self._stats_raw.find_one({"unique_key":key, "iteration":it})
@@ -95,13 +97,16 @@ class Stats_Database():
                         doc['parameters'] = expt['parameters']
                         doc['unique_key'] = expt['unique_key']
                         print doc
-                       
+                    
+                    #add num breakouts
+                    breakouts.append(expt['num_breakouts'])
+                    
                     ng = 0  # number good that we're trying to initialize
                     for gen in expt['data']:
                         while gen['n_good'] >= ng:
                             it_ng_nc[it][ng] = gen['n_cand']
                             ng += 1
-                    
+                
                 ng_it_nc = np.transpose(it_ng_nc)  # [numgood, iteration] = (# candidates needed)
                 ng_avg = [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
                 ng_stdev = [np.std(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] # [numgood] = (stdev # of candidates needed)
@@ -109,6 +114,7 @@ class Stats_Database():
                 ng_max = [np.max(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]
                 ng_range = [ng_max[idx] - ng_min[idx] for idx in range(len(ng_max))]
     
+                doc['breakouts_avg'] = np.average(breakouts)
                 doc['ng_it_nc'] = ng_it_nc.tolist()
                 doc['ng_avg'] = ng_avg
                 doc['ng_stdev'] = ng_stdev
