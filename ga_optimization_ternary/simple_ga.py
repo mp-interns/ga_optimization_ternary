@@ -201,7 +201,7 @@ def main_loop():
     mutator_fncs = [Mutators.G1DListMutatorAllele]
     tournament_rates = [0.05, 0.1, 0.25]
     mutation_rates = [0.01, 0.05, 0.1]
-    elitisms = [0, 0.1, 0.5]
+    elitisms = [0, 0.1, 0.5, 0.75]
     nichings = [False]  # TODO: implement True
     initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
     initializations = ["none"]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
