@@ -40,7 +40,7 @@ import math
 import copy
 
 
-NUM_ITERATIONS = 10
+NUM_ITERATIONS = 20
 
 """
 def transform_list(my_list):

@@ -80,7 +80,7 @@ class Stats_Database():
         self._stats_raw.insert(doc)
     
     def process_stats_new(self):
-        num_iterations = 10
+        num_iterations = 20
         for key in self._stats_raw.distinct("unique_key"):
             if self._stats_raw.find({"unique_key": key}).count() >= num_iterations:
                 # we have a good param set ... go through the iterations
