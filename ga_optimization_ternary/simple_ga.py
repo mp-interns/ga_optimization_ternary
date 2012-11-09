@@ -103,8 +103,10 @@ class StatTrack():
     
     def __init__(self, fe, mutation_rate, tournament_rate, include_ridiculous=True):
         self._candidates_tried = set()
+        self._candidates_tried_all = set()
         self._candidates_good = set()
         self.generation_ncandidates = [0]
+        self.generation_ncandidates_all = [0]
         self.generation_ngood = [0]
         self._fitness_evaluator = fe
         self.num_breakouts = 0
@@ -118,15 +120,19 @@ class StatTrack():
             if self.include_ridiculous or cand not in get_excluded_list():
                 self._candidates_tried.add(cand)
             
+            self._candidates_tried_all.add(cand)
+                
             if cand in GOOD_CANDS_LS:
                 self._candidates_good.add(cand)
             
         self.generation_ncandidates.append(len(self._candidates_tried))
+        self.generation_ncandidates_all.append(len(self._candidates_tried_all))
+        
         self.generation_ngood.append(len(self._candidates_good))
         if len(self._candidates_good) == MAX_GOOD_LS:
             AllFound.ALL_FOUND = True
         
-        return self.generation_ncandidates[-1] - self.generation_ncandidates[-2]
+        return self.generation_ncandidates_all[-1] - self.generation_ncandidates_all[-2]
         
     def evolve_callback(self, ga):
         ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
