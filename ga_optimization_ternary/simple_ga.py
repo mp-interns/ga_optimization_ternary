@@ -12,7 +12,7 @@ logging.warning('Logging enabled')
 """
 
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex,\
-    eval_fitness_simple_exclusion
+    eval_fitness_simple_exclusion, eval_fitness_complex_exclusion
 from collections import OrderedDict
 from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS,\
     InitializationDB
@@ -113,22 +113,24 @@ class StatTrack():
         self.mutation_rate = mutation_rate
         self.tournament_rate = tournament_rate
         self.include_ridiculous = include_ridiculous
+        self.excluded_list = get_excluded_list()
     
     def updateStats(self, generation_num, population):
         for i in population:
             cand = self._fitness_evaluator.convert_raw_to_Z((i[0], i[1], i[2]))
-            if self.include_ridiculous or cand not in get_excluded_list():
+            if self.include_ridiculous or cand not in self.excluded_list:
                 self._candidates_tried.add(cand)
             
             self._candidates_tried_all.add(cand)
                 
             if cand in GOOD_CANDS_LS:
                 self._candidates_good.add(cand)
-            
+        
         self.generation_ncandidates.append(len(self._candidates_tried))
         self.generation_ncandidates_all.append(len(self._candidates_tried_all))
         
         self.generation_ngood.append(len(self._candidates_good))
+        
         if len(self._candidates_good) == MAX_GOOD_LS:
             AllFound.ALL_FOUND = True
         
@@ -137,7 +139,6 @@ class StatTrack():
     def evolve_callback(self, ga):
         ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
-        
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
         if cands_added < breakout_cutoff:
             ga.setMutationRate(1.0)
@@ -240,18 +241,18 @@ def main_loop():
 
 
 def main_loop_exclusions():
-    ncores = 2
-    clear = False
+    ncores = 4
+    clear = True
     # clear the Stats DB
     db = Stats_Database(clear=clear, extension="_exclusion")
     popsizes = [100]
-    fitness_fncs = [eval_fitness_simple_exclusion]
+    fitness_fncs = [eval_fitness_complex_exclusion]
     fitness_temps = [2.5]
-    crossover_fncs = [Crossovers.G1DListCrossoverUniform]
+    crossover_fncs = [Crossovers.G1DListCrossoverSinglePoint]
     selection_fncs = [Selectors.GRouletteWheel]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
     tournament_rates = [0.05]
-    mutation_rates = [0.1]
+    mutation_rates = [0.05]
     elitisms = [0.5]
     nichings = [False]  # TODO: implement True
     initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
@@ -280,8 +281,8 @@ def main_loop_exclusions():
                                                                     print "We already have pset:", ps.unique_key()
 
     print 'the number of parameter sets is', len(all_ps)
-    process_serial(all_ps)
-    #process_parallel(all_ps, ncores)
+    #process_serial(all_ps)
+    process_parallel(all_ps, ncores)
 
 
 def process_parameterset(ps):
@@ -321,4 +322,4 @@ def process_serial(all_ps):
         process_parameterset(ps)
 
 if __name__ == "__main__":
-    main_loop()
+    main_loop_exclusions()
