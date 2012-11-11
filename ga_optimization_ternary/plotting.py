@@ -8,8 +8,7 @@ from ga_optimization_ternary.database import M_Database, Stats_Database, MAX_GOO
     NUM_CANDS
 from ga_optimization_ternary.utils import get_reference_array
 from ga_optimization_ternary import ranked_list_optimization
-from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt,\
-    get_ranked_list_goldschmidt_halffill
+from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -178,12 +177,12 @@ class ComparisonPlot():
 
 class ParametersPlot():
 
-    def __init__(self, format=None):
+    def __init__(self, format=None, criteria="all"):
         plt.figure(1, figsize=(16,8))
         self.db = Stats_Database()
         self.stats_process = self.db._stats_process
         self.num_exps = self.stats_process.count()
-        
+        self.criteria = criteria
         self.fontname = "Trebuchet MS"
         
         params = ["crossover_fnc", "popsize", "selection_overall", "mutation_rate", "elitism_num", "fitness_fnc"]
@@ -209,19 +208,21 @@ class ParametersPlot():
             labels.sort(key=lambda label: ord(label.split("-")[0][1])*10 + float(label.split("-")[1])+float(label.split("-")[2]))
         for label in labels:
             # get the best
-            '''
-            best = self.stats_process.find({"parameters."+parameter:label}, sort=[("all",pymongo.ASCENDING)])[0]
-            data.append(get_reference_array()[MAX_GOOD_LS]/best["all"])
+            best = self.stats_process.find({"parameters."+parameter:label}, sort=[(self.criteria, pymongo.ASCENDING)])[0]
+            if self.criteria == "all":
+                data.append(get_reference_array()[MAX_GOOD_LS]/best["all"])
+            elif self.criteria == "ten":
+                data.append(get_reference_array()[10]/best["ten"])
             '''
             # get the average
             m_sum = 0.0
             npoints = 0.0
-            num_to_average = 1000  # average the num_to_average BEST runs
-            for item in self.stats_process.find({"parameters." + parameter: label}, {"ten": 1}, sort=[("ten",pymongo.ASCENDING)]).limit(num_to_average):
-                m_sum = m_sum + get_reference_array()[10] / item["ten"]
+            num_to_average = 1  # average the num_to_average BEST runs
+            for item in self.stats_process.find({"parameters." + parameter: label}, {"all": 1}, sort=[("all",pymongo.ASCENDING)]).limit(num_to_average):
+                m_sum = m_sum + get_reference_array()[MAX_GOOD_LS] / item["all"]
                 npoints = npoints + 1
             data.append(m_sum / npoints)
-
+            '''
         pretty_labels = [get_pretty_name(n) for n in labels]
         xlocations = np.array(range(len(data))) + 0.5
         width = 0.75
@@ -262,6 +263,8 @@ class DataTable():
     
 if __name__ == "__main__":
     format = None
+    print get_reference_array()[10]/8
+    print get_reference_array()[20]/4
     
     if format:
         PerformancePlot(format=format)
@@ -269,10 +272,11 @@ if __name__ == "__main__":
         ParametersPlot(format=format)
     
     else:
-        TenAllPlot()
-        #PerformancePlot()
+        #TenAllPlot()
+        PerformancePlot()
         #ComparisonPlot()
-        # ParametersPlot()
+        ParametersPlot(criteria="all")
+        ParametersPlot(criteria="ten")
         plt.show()
     
     # DataTable()
