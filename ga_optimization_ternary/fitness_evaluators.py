@@ -98,11 +98,15 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         
         if (gap_dir >= 1.5 and gap_dir <= 3):
             gap_dir_score += 10
+        elif gap_dir == 0:
+            gap_dir_score += 0
         else:
             gap_dir_score += 33 * gaussian_pdf(gap_dir, 2.25)
             
         if (gap_ind >= 1.5 and gap_ind <= 3):
             gap_ind_score += 10
+        elif gap_ind == 0:
+            gap_ind_score += 0
         else:
             gap_ind_score += 33 * gaussian_pdf(gap_ind, 2.25)
             
