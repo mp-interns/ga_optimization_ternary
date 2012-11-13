@@ -41,7 +41,7 @@ def get_pretty_name(ugly_name):
     d['popsize'] = "Population size"
     d['mutation_rate'] = "Mutation Rate"
     d['elitism_num'] = "Number of Elite"
-    d['eval_fitness_complex'] = "Partial"
+    d['eval_fitness_complex'] = "Smooth"
     d["GTournamentSelectorAlternative-0.25-1.25"] = "T-0.25"
     d["GTournamentSelectorAlternative-0.05-1.25"] = "T-0.05"
     d["GTournamentSelectorAlternative-0.1-1.25"] = "T-0.10"
@@ -66,9 +66,9 @@ class PerformancePlot():
         self.fontname = "Trebuchet MS"
         
         self.get_reference_data()  # reference
-        self.get_goldschmidt_data()  # goldschmidt reference
-        self.get_data(0, "best GA (all)", "blue", pos="right", crit="all")  # best
-        self.get_data(0, "best GA (ten)", "green", pos="right", crit="ten")  # best
+        # self.get_goldschmidt_data()  # goldschmidt reference
+        self.get_data(0, "best GA", "blue", pos="right", crit="mixed")  # best
+        # self.get_data(0, "best GA (ten)", "green", pos="right", crit="ten")  # best
         self.get_data(num_exps-1, "worst GA", "red", "right")  # ~worst
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
@@ -87,7 +87,10 @@ class PerformancePlot():
         x = []
         y = []
         xerr = []
-        data = self.stats_process.find({}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+        if crit == "mixed":
+            data = self.stats_process.find({"ten":{"$lte":1060}, "all":{"$lte":4507}}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+        else:
+            data = self.stats_process.find({}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
         for idx, val in enumerate(data['ng_avg']):
             y.append(idx)
             x.append(val)
@@ -95,7 +98,7 @@ class PerformancePlot():
         ha, va, xytext = "right", "bottom", (-5, 5)
         
         if pos == "right":
-            ha, va, xytext = "left", "bottom", (15, 5)
+            ha, va, xytext = "left", "bottom", (25, 5)
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
         plt.annotate(label, xy = (x[(int)(MAX_GOOD_LS*3/4)], y[(int)(MAX_GOOD_LS*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
@@ -104,15 +107,83 @@ class PerformancePlot():
         color = [.996, .415, 0]
         y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt_halffill())
         plt.errorbar(x, y, lw=self.lw, color=color)
-        plt.annotate("chemical\nrules", xy = (x[20], y[20]), xytext = (5, 10), color=color, textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate("chemical\nrules", xy = (x[19], y[19]), xytext = (-15, 15), color=color, textcoords = 'offset points', ha = 'right', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference_data(self):
         x = [0, get_reference_array()[MAX_GOOD_LS]]
         y = [0, MAX_GOOD_LS]
         plt.errorbar(x, y, lw=self.lw, color="black")
-        plt.annotate("random", xy = (x[1] * 0.75, y[1] * 0.75), xytext = (-5, 0), color="black", textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
-        
+        plt.annotate("random", xy = (x[1] * 0.95, y[1] * 0.95), xytext = (-5, 5), color="black", textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
 
+class PerformancePlotExclusion():
+
+    def __init__(self, format=None):
+        plt.figure(1, figsize=(8,6))
+        self.db = Stats_Database()
+        self.db2 = Stats_Database(extension="_exclusion")
+        self.stats_process = self.db._stats_process
+        self.stats_process2 = self.db2._stats_process
+        
+        self.lw = 4
+        self.fontsize = 14
+        self.fontname = "Trebuchet MS"
+        
+        self.get_goldschmidt_data()  # goldschmidt reference
+        self.get_data(0, "best GA", "blue", pos="right", crit="all")  # best
+        self.get_data_exclusion(0, "best GA + chemical", "green", pos="left", crit="all")  # best
+        
+        plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
+        plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
+        plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylim((0, MAX_GOOD_LS + 0.5))
+        plt.xlim((0, 5500))
+        
+        if format:
+            plt.savefig("performance_plot_exclusion."+format)
+        else:
+            plt.show()
+        
+    def get_data(self, idx, label, color, pos="left", crit="all"):
+        x = []
+        y = []
+        xerr = []
+        data = self.stats_process.find({}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+        for idx, val in enumerate(data['ng_avg']):
+            y.append(idx)
+            x.append(val)
+            xerr.append(data['ng_stdev'][idx])
+        ha, va, xytext = "right", "bottom", (-5, 5)
+        
+        if pos == "right":
+            ha, va, xytext = "left", "bottom", (25, 5)
+            
+        plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
+        plt.annotate(label, xy = (x[(int)(MAX_GOOD_LS*3/4)], y[(int)(MAX_GOOD_LS*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+    
+    def get_data_exclusion(self, idx, label, color, pos="left", crit="all"):
+        x = []
+        y = []
+        xerr = []
+        data = self.stats_process2.find({}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+        for idx, val in enumerate(data['ng_avg']):
+            y.append(idx)
+            x.append(val)
+            xerr.append(data['ng_stdev'][idx])
+        ha, va, xytext = "right", "bottom", (-10, 5)
+        
+        if pos == "right":
+            ha, va, xytext = "left", "bottom", (25, 5)
+            
+        plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
+        plt.annotate(label, xy = (x[(int)(MAX_GOOD_LS*19/20)], y[(int)(MAX_GOOD_LS*19/20)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        
+    def get_goldschmidt_data(self):
+        color = [.996, .415, 0]
+        y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt_halffill())
+        plt.errorbar(x, y, lw=self.lw, color=color)
+        plt.annotate("chemical", xy = (x[19], y[19]), xytext = (10, 15), color=color, textcoords = 'offset points', ha = 'right', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+    
 class ComparisonPlot():
 
     def __init__(self, format=None):
@@ -131,7 +202,7 @@ class ComparisonPlot():
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.xlim((0, self.num_exps))
         self.get_reference()
-        self.get_data() 
+        self.get_data()
         if format:
             plt.savefig("comparison_plot."+format)
         else:
@@ -145,19 +216,8 @@ class ComparisonPlot():
             x.append(idx)
             idx = idx + 1
             y.append(get_reference_array()[10]/data["ten"])
-        plt.errorbar(x, y, lw=self.lw, color="red")
-        plt.annotate("10 materials", xy = (x[50], y[50]), xytext = (10, 0), color="red", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
-        
-        color = [0, 0, 0]
-        x = []
-        y = []
-        idx = 1
-        for data in self.stats_process.find({}, sort = [("fifteen", pymongo.ASCENDING)]):
-            x.append(idx)
-            idx = idx + 1
-            y.append(get_reference_array()[15]/data["fifteen"])
-        plt.errorbar(x, y, lw=self.lw, color="blue")
-        plt.annotate("15 materials", xy = (x[75], y[75]), xytext = (50, -10), color="blue", textcoords = 'offset points', ha = 'left', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.errorbar(x, y, linestyle="--", lw=self.lw, color="blue")
+        plt.annotate("10 materials", xy = (x[50], y[50]), xytext = (10, 0), color="blue", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
         x = []
         y = []
@@ -166,14 +226,15 @@ class ComparisonPlot():
             x.append(idx)
             idx = idx + 1
             y.append(get_reference_array()[MAX_GOOD_LS]/data["all"])
-        plt.errorbar(x, y, lw=self.lw, color=color)
-        plt.annotate("all 22 materials", xy = (x[100], y[100]), xytext = (25, 5), color=color, textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.errorbar(x, y, lw=self.lw, color="blue")
+        plt.annotate("all 20 materials", xy = (x[100], y[100]), xytext = (25, 5), color="blue", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference(self):
         x = [0, self.num_exps]
         y = [1, 1]
-        plt.plot(x, y, "k--", lw=3)
-
+        plt.plot(x, y, "k-", lw=3)
+        plt.annotate("no gain", xy = (x[0], y[0]), xytext = (25, 5), color="black", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+    
 
 class ParametersPlot():
 
@@ -233,14 +294,22 @@ class ParametersPlot():
     
 class TenAllPlot():
 
-    def __init__(self):
+    def __init__(self, format=None):
         plt.figure(3)
         self.db = Stats_Database()
         self.stats_process = self.db._stats_process
-        num_exps = self.stats_process.count()
+        self.fontname = "Trebuchet MS"
+        self.fontsize = 14
         
         self.get_data()
         
+        plt.xlabel("Efficiency (10 materials)", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Efficiency (all 20 materials)", fontname=self.fontname, fontsize=self.fontsize)
+        
+        if format:
+            plt.savefig("tenall_plot."+format)
+        else:
+            plt.show()
     
     def get_data(self):
         x = []
@@ -262,38 +331,23 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    format = None
-    print get_reference_array()[10]/8
-    print get_reference_array()[20]/4
+    format = "png"
     
+    print get_reference_array()[10]/8.5
+    print get_reference_array()[20]/4
     if format:
-        PerformancePlot(format=format)
-        ComparisonPlot(format=format)
-        ParametersPlot(format=format)
+        #PerformancePlot(format=format)
+        #ComparisonPlot(format=format)
+        #ParametersPlot(format=format)
+        #PerformancePlotExclusion(format=format)
+        TenAllPlot(format=format)
     
     else:
-        #TenAllPlot()
+        TenAllPlot()
         PerformancePlot()
-        #ComparisonPlot()
+        ComparisonPlot()
         ParametersPlot(criteria="all")
         ParametersPlot(criteria="ten")
         plt.show()
     
     # DataTable()
-    
-"""
-# example data
-x = [1, 2, 3, 4, 5]
-y = [1, 2, 3, 4, 5]
-x2 = [2, 4, 6, 8, 10]
-xerr = [1, 2, 3, 4, 5]
-
-# First illustrate basic pyplot interface, using defaults where possible.
-plt.xlim((0,6))
-plt.ylim((0,6))
-plt.errorbar(x, y, xerr=xerr)
-plt.errorbar(x2, y, xerr=xerr)
-
-print 'yay'
-plt.show()
-"""
