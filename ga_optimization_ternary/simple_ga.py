@@ -247,7 +247,7 @@ def main_loop_exclusions():
     db = Stats_Database(clear=clear, extension="_exclusion")
     popsizes = [100]
     fitness_fncs = [eval_fitness_complex_exclusion]
-    fitness_temps = [2.5]
+    fitness_temps = [5]
     crossover_fncs = [Crossovers.G1DListCrossoverSinglePoint]
     selection_fncs = [Selectors.GRouletteWheel]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
