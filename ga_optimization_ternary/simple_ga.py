@@ -248,7 +248,7 @@ def main_loop_exclusions():
     popsizes = [100]
     fitness_fncs = [eval_fitness_complex_exclusion]
     fitness_temps = [5]
-    crossover_fncs = [Crossovers.G1DListCrossoverSinglePoint]
+    crossover_fncs = [Crossovers.G1DListCrossoverUniform]
     selection_fncs = [Selectors.GRouletteWheel]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
     tournament_rates = [0.05]
