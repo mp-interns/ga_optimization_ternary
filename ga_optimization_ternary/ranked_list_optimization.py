@@ -8,7 +8,7 @@ from pymatgen.core.periodic_table import Element
 import math
 import pickle
 import os
-from ga_optimization_ternary.database import GOOD_CANDS_LS
+from ga_optimization_ternary.database import GOOD_CANDS_LS, GOOD_CANDS_OS
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -178,10 +178,11 @@ def get_ranked_list_goldschmidt_halffill():
         with open(filename) as f:
             return pickle.load(f)
     
+    from ga_optimization_ternary.fitness_evaluators import FitnessEvaluator, eval_fitness_simple
     all_AB = FitnessEvaluator(eval_fitness_simple, 10)._reverse_dict.keys()
     print 'generating goldschmidt ranks...'
     cand_score = {}  # dictionary of cand_tuple:score. a high score is BAD
-    good_cands = GOOD_CANDS_LS
+    
     for a in all_AB:
         for b in all_AB:
             for x in range(7):
@@ -275,7 +276,25 @@ def get_stats(ranked_list):
             num_cands.append(counter)
     
     return (num_good, num_cands)
-        
+
+
+def get_stats_OS(ranked_list):
+    # Input is a ranked list
+    # each element of the list is a vector of (A, X, B)
+    num_good = [0]
+    num_cands = [0]
+    good_cands = GOOD_CANDS_OS
+    
+    counter = 0
+    for cand in ranked_list:
+        counter += 1
+        if cand in good_cands:
+            num_good.append(num_good[-1] + 1)
+            num_cands.append(counter)
+    
+    return (num_good, num_cands)
+
+
 if __name__ == "__main__":
     a = get_excluded_list()
     print len(a)

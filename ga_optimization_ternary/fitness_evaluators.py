@@ -180,6 +180,38 @@ def eval_fitness_complex_exclusion():
     pass
 
 
+def eval_fitness_complex_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
+        stab_score = 0
+        gap_score = 0
+        gap_dir_score = 0
+        gap_ind_score = 0
+        
+        if gap_dir >= 3:
+            gap_score += 10
+        elif gap_dir == 0:
+            gap_score = 0
+        else:
+            distance = (3 - gap_dir) * 5
+            gap_score += 20 * (1-1/(1+math.exp(-distance)))
+        
+        if heat_of_formation <= 0.2:
+            stab_score = 10
+        else:
+            stab_score = 20 * (1-1/(1+math.exp(((-heat_of_formation) + 0.2) * 3.5)))
+        
+        if (vb_dir >= 6.2 and vb_dir <= 7):
+            gap_dir_score += 10
+        else:
+            gap_dir_score += 27.13 * gaussian_pdf(vb_dir, 6.6)
+        
+        if (vb_ind >= 6.2 and vb_ind <= 7):
+            gap_ind_score += 10
+        else:
+            gap_ind_score += 27.13 * gaussian_pdf(vb_ind, 6.6)
+        
+        return gap_score + stab_score + max(gap_ind_score, gap_dir_score)
+
+
 def eval_fitness_simple_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
         stab_score = 0
         gap_score = 0
@@ -206,11 +238,9 @@ def eval_fitness_simple_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir
         
         if (vb_ind <= 7):
             gap_ind_score += 5
-                    
+        
         return gap_score + stab_score + max(gap_ind_score, gap_dir_score)
 
-def eval_fitness_complex_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
-    pass
 
 def score (cb_dir):
         if cb_dir <= 4.5:
@@ -218,9 +248,10 @@ def score (cb_dir):
         else:
             return max(0, 5 - (cb_dir - 4.5))
 
+
 if __name__ == "__main__":
     #print score(4.8)
-    print eval_fitness_complex_oxide_shield(2, 3.01, 0.5, 1, 1, 2, 2)
+    print eval_fitness_complex_oxide_shield(2, 7.00001, 0.5, 6.199999, 1, 2, 2)
     # print gaussian_pdf(gap_ind, 2.25) * 33
     #fe = FitnessEvaluator()
     #print fe.array_to_score((49,41,20))

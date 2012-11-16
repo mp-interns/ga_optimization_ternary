@@ -4,8 +4,8 @@ from __future__ import division
 '''
 Created on Jul 6, 2012
 '''
-from ga_optimization_ternary.database import M_Database, Stats_Database, MAX_GOOD_LS,\
-    NUM_CANDS
+from ga_optimization_ternary.database import M_Database, Stats_Database, NUM_CANDS,\
+    GOOD_CANDS_LS
 from ga_optimization_ternary.utils import get_reference_array
 from ga_optimization_ternary import ranked_list_optimization
 from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill
@@ -75,7 +75,7 @@ class PerformancePlot():
         plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylim((0, MAX_GOOD_LS + 0.5))
+        plt.ylim((0, len(GOOD_CANDS_LS) + 0.5))
         plt.xlim((0, NUM_CANDS))
         
         if format:
@@ -101,7 +101,7 @@ class PerformancePlot():
             ha, va, xytext = "left", "bottom", (25, 5)
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
-        plt.annotate(label, xy = (x[(int)(MAX_GOOD_LS*3/4)], y[(int)(MAX_GOOD_LS*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate(label, xy = (x[(int)(len(GOOD_CANDS_LS)*3/4)], y[(int)(len(GOOD_CANDS_LS)*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_goldschmidt_data(self):
         color = [.996, .415, 0]
@@ -110,8 +110,8 @@ class PerformancePlot():
         plt.annotate("chemical\nrules", xy = (x[19], y[19]), xytext = (-15, 15), color=color, textcoords = 'offset points', ha = 'right', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_reference_data(self):
-        x = [0, get_reference_array()[MAX_GOOD_LS]]
-        y = [0, MAX_GOOD_LS]
+        x = [0, get_reference_array()[len(GOOD_CANDS_LS)]]
+        y = [0, len(GOOD_CANDS_LS)]
         plt.errorbar(x, y, lw=self.lw, color="black")
         plt.annotate("random", xy = (x[1] * 0.95, y[1] * 0.95), xytext = (-5, 5), color="black", textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
 
@@ -136,7 +136,7 @@ class PerformancePlotExclusion():
         plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylim((0, MAX_GOOD_LS + 0.5))
+        plt.ylim((0, len(GOOD_CANDS_LS) + 0.5))
         plt.xlim((0, 5500))
         
         if format:
@@ -159,7 +159,7 @@ class PerformancePlotExclusion():
             ha, va, xytext = "left", "bottom", (25, 5)
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
-        plt.annotate(label, xy = (x[(int)(MAX_GOOD_LS*3/4)], y[(int)(MAX_GOOD_LS*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate(label, xy = (x[(int)(len(GOOD_CANDS_LS)*3/4)], y[(int)(len(GOOD_CANDS_LS)*3/4)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
     def get_data_exclusion(self, idx, label, color, pos="left", crit="all"):
         x = []
@@ -176,7 +176,7 @@ class PerformancePlotExclusion():
             ha, va, xytext = "left", "bottom", (25, 5)
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
-        plt.annotate(label, xy = (x[(int)(MAX_GOOD_LS*19/20)], y[(int)(MAX_GOOD_LS*19/20)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate(label, xy = (x[(int)(len(GOOD_CANDS_LS)*19/20)], y[(int)(len(GOOD_CANDS_LS)*19/20)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
     def get_goldschmidt_data(self):
         color = [.996, .415, 0]
@@ -225,7 +225,7 @@ class ComparisonPlot():
         for data in self.stats_process.find({}, sort = [("all", pymongo.ASCENDING)]):
             x.append(idx)
             idx = idx + 1
-            y.append(get_reference_array()[MAX_GOOD_LS]/data["all"])
+            y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data["all"])
         plt.errorbar(x, y, lw=self.lw, color="blue")
         plt.annotate("all 20 materials", xy = (x[100], y[100]), xytext = (25, 5), color="blue", textcoords = 'offset points', ha = 'left', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
@@ -271,7 +271,7 @@ class ParametersPlot():
             # get the best
             best = self.stats_process.find({"parameters."+parameter:label}, sort=[(self.criteria, pymongo.ASCENDING)])[0]
             if self.criteria == "all":
-                data.append(get_reference_array()[MAX_GOOD_LS]/best["all"])
+                data.append(get_reference_array()[len(GOOD_CANDS_LS)]/best["all"])
             elif self.criteria == "ten":
                 data.append(get_reference_array()[10]/best["ten"])
             '''
@@ -280,7 +280,7 @@ class ParametersPlot():
             npoints = 0.0
             num_to_average = 1  # average the num_to_average BEST runs
             for item in self.stats_process.find({"parameters." + parameter: label}, {"all": 1}, sort=[("all",pymongo.ASCENDING)]).limit(num_to_average):
-                m_sum = m_sum + get_reference_array()[MAX_GOOD_LS] / item["all"]
+                m_sum = m_sum + get_reference_array()[len(GOOD_CANDS_LS)] / item["all"]
                 npoints = npoints + 1
             data.append(m_sum / npoints)
             '''
@@ -316,7 +316,7 @@ class TenAllPlot():
         y = []
         for data in self.stats_process.find({}):
             x.append(get_reference_array()[10]/data['ten'])
-            y.append(get_reference_array()[MAX_GOOD_LS]/data['all'])
+            y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
         plt.scatter(x, y)
     
 class DataTable():
@@ -333,14 +333,14 @@ class DataTable():
 if __name__ == "__main__":
     format = "png"
     
-    print get_reference_array()[10]/8.5
-    print get_reference_array()[20]/4
+    print get_reference_array()[10]/559
+    print get_reference_array()[20]/2207
     if format:
         #PerformancePlot(format=format)
         #ComparisonPlot(format=format)
         #ParametersPlot(format=format)
-        #PerformancePlotExclusion(format=format)
-        TenAllPlot(format=format)
+        PerformancePlotExclusion(format=format)
+        #TenAllPlot(format=format)
     
     else:
         TenAllPlot()

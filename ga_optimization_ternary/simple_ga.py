@@ -12,12 +12,12 @@ logging.warning('Logging enabled')
 """
 
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex,\
-    eval_fitness_simple_exclusion, eval_fitness_complex_exclusion
+    eval_fitness_simple_exclusion, eval_fitness_complex_exclusion,\
+    eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield
 from collections import OrderedDict
-from ga_optimization_ternary.database import MAX_GOOD_LS, GOOD_CANDS_LS,\
-    InitializationDB
-from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill,\
-    get_excluded_list
+from ga_optimization_ternary.database import GOOD_CANDS_LS,\
+    InitializationDB, GOOD_CANDS_OS
+from ga_optimization_ternary.ranked_list_optimization import get_excluded_list
     
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -33,11 +33,9 @@ from pyevolve import Statistics, Crossovers
 from fitness_evaluators import FitnessEvaluator
 from database import Stats_Database
 
-from scipy.interpolate import interp1d
 
 import multiprocessing
 import math
-import copy
 
 
 NUM_ITERATIONS = 20
@@ -52,7 +50,6 @@ def transform_list(my_list):
     
 class AllFound():
     ALL_FOUND = False
-    # initialization_dict = {"goldschmidt_halffill": transform_list(get_ranked_list_goldschmidt_halffill()), "awesome_list":transform_list(GOOD_CANDS_LS)}
 
 
 def AllFoundCriteria(ga_engine):
@@ -101,7 +98,7 @@ class ParameterSet():
 
 class StatTrack():
     
-    def __init__(self, fe, mutation_rate, tournament_rate, include_ridiculous=True):
+    def __init__(self, fe, mutation_rate, tournament_rate, include_ridiculous=True, application="LS"):
         self._candidates_tried = set()
         self._candidates_tried_all = set()
         self._candidates_good = set()
@@ -114,6 +111,7 @@ class StatTrack():
         self.tournament_rate = tournament_rate
         self.include_ridiculous = include_ridiculous
         self.excluded_list = get_excluded_list()
+        self.good_list = GOOD_CANDS_LS if application == "LS" else GOOD_CANDS_OS
     
     def updateStats(self, generation_num, population):
         for i in population:
@@ -123,7 +121,7 @@ class StatTrack():
             
             self._candidates_tried_all.add(cand)
                 
-            if cand in GOOD_CANDS_LS:
+            if cand in self.good_list:
                 self._candidates_good.add(cand)
         
         self.generation_ncandidates.append(len(self._candidates_tried))
@@ -131,7 +129,7 @@ class StatTrack():
         
         self.generation_ngood.append(len(self._candidates_good))
         
-        if len(self._candidates_good) == MAX_GOOD_LS:
+        if len(self._candidates_good) == len(self.good_list):
             AllFound.ALL_FOUND = True
         
         return self.generation_ncandidates_all[-1] - self.generation_ncandidates_all[-2]
@@ -171,7 +169,9 @@ def run_simulation(pset, max_generations, initial_list=None):
     fe = FitnessEvaluator(pset.fitness_fnc, pset.fitness_temp)
     Consts.CDefScaleLinearMultiplier = pset.fitness_temp
     
-    st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate, include_ridiculous=pset.include_ridiculous)
+    application = "LS" if "oxide" in pset.fitness_fnc.__name__ else "OS"
+    
+    st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate, include_ridiculous=pset.include_ridiculous, application=application)
     
     genome.crossover.set(pset.crossover_fnc)
     genome.mutator.set(pset.mutation_fnc)
@@ -205,12 +205,12 @@ def main_loop():
     # clear the Stats DB
     db = Stats_Database(clear=clear)
     popsizes = [20, 100, 500, 1000]
-    fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
+    fitness_fncs = [eval_fitness_simple, eval_fitness_complex, eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield]
     fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05, 0.1, 0.25, 2]
+    tournament_rates = [0.05, 0.1, 0.25, 2]  # 2 means always pick 2 from the population
     mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5, 0.75]
     nichings = [False]  # TODO: implement True

@@ -28,7 +28,7 @@ class FitnessPlot():
         self.lw = 4
         self.fontsize = 14
         
-        params = [("Formation E (eV)", "Smooth"), ("Formation E (eV)", "Abrupt"), ("Band Gap (eV)", "Smooth"), ("Band Gap (eV)", "Abrupt"), ("Band edge distance (eV)", "Smooth"), ("Band edge distance (eV)", "Abrupt")]
+        params = [("Formation E (eV)", "Smooth"), ("Formation E (eV)", "Discontinuous"), ("Band Gap (eV)", "Smooth"), ("Band Gap (eV)", "Discontinuous"), ("Band edge distance (eV)", "Smooth"), ("Band edge distance (eV)", "Discontinuous")]
         plt.subplot(3, 2, 1)
         for idx, param in enumerate(params):
             plt.subplot(3, 2, idx+1)
@@ -79,7 +79,7 @@ class FitnessPlot():
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.errorbar(x, y, lw=self.lw, color="blue")
-        #plt.ylim((0, MAX_GOOD_LS + 0.5))
+        plt.ylim((0, max(y)+1))
         #plt.xlim((0, NUM_CANDS))
     
 
@@ -101,6 +101,8 @@ def heat_of_formation_simple(heat_of_formation):
 
 
 def gap_complex(gap_dir):
+    if gap_dir == 0:
+        return 0
     if (gap_dir >= 1.5 and gap_dir <= 3):
         return 10
     else:

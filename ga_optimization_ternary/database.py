@@ -3,7 +3,6 @@
 from __future__ import division
 
 
-
 '''
 Created on Mar 14, 2012
 '''
@@ -24,7 +23,9 @@ import os
 import pickle
 
 GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1), (38,32,0), (38,50,0), (38,73,1), (39,73,2), (47,41,0), (50,22,0), (55,41,0), (56,31,4), (56,49,4), (56,50,0), (56,73,1), (57,22,1), (57,73,2), (82,31,4)]
-MAX_GOOD_LS = len(GOOD_CANDS_LS)
+
+GOOD_CANDS_OS = [(20, 50, 0), (37, 41, 0), (38, 22, 0), (38, 50, 0), (55, 73, 0), (56, 49, 4)]
+
 NUM_CANDS = 18928
 
 
@@ -85,7 +86,7 @@ class Stats_Database():
             if self._stats_raw.find({"unique_key": key}).count() >= num_iterations:
                 # we have a good param set ... go through the iterations
                 doc = {}
-                it_ng_nc = np.zeros((num_iterations, MAX_GOOD_LS + 1))  # [iteration, numgood] = (# candidates needed)
+                it_ng_nc = np.zeros((num_iterations, len(GOOD_CANDS_LS) + 1))  # [iteration, numgood] = (# candidates needed)
                 
                 breakouts = []
                 
@@ -121,55 +122,11 @@ class Stats_Database():
                 doc['ng_min'] = ng_min
                 doc['ng_max'] = ng_max
                 doc['ng_range'] = ng_range
-                doc['all'] = ng_avg[MAX_GOOD_LS]  # shorthand, avg number of candidates needed to get all good cands
+                doc['all'] = ng_avg[len(GOOD_CANDS_LS)]  # shorthand, avg number of candidates needed to get all good cands
                 doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
                 doc['fifteen'] = ng_avg[15]  # shorthand, avg number of candidates needed to get 15 good cands (about 2/3)
                 print doc
                 self._stats_process.insert(doc)
-        
-    def process_stats(self):
-        raise ValueError("This must be updated...")
-        for expt in self._stats_raw.find():
-            
-            # remove any previous document
-            self._stats_process.remove({"unique_key": expt['unique_key']})
-            
-            # initalize doc
-            doc = {}
-            doc['parameters'] = expt['parameters']
-            doc['unique_key'] = expt['unique_key']
-            
-            # initialize data
-            num_iterations = len(expt['iterations'])
-            it_ng_nc = np.zeros((num_iterations, MAX_GOOD_LS + 1))  # [iteration, numgood] = (# candidates needed)
-            
-            for it, dat in enumerate(expt['iterations']):
-                ng = 0  # number good that we're trying to initialize
-                for gen in dat:
-                    while gen['n_good'] >= ng:
-                        it_ng_nc[it][ng] = gen['n_cand']
-                        ng += 1
-                        
-            ng_it_nc = np.transpose(it_ng_nc)  # [numgood, iteration] = (# candidates needed)
-            
-            ng_avg = [np.average(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]  # [numgood] = (avg # of candidates needed)
-            ng_stdev = [np.std(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] # [numgood] = (stdev # of candidates needed)
-            ng_min = [np.min(ng_it_nc[idx]) for idx in range(len(ng_it_nc))] 
-            ng_max = [np.max(ng_it_nc[idx]) for idx in range(len(ng_it_nc))]
-            ng_range = [ng_max[idx] - ng_min[idx] for idx in range(len(ng_max))]
-
-            doc['ng_it_nc'] = ng_it_nc.tolist()
-            doc['ng_avg'] = ng_avg
-            doc['ng_stdev'] = ng_stdev
-            doc['ng_min'] = ng_min
-            doc['ng_max'] = ng_max
-            doc['ng_range'] = ng_range
-            doc['all'] = ng_avg[MAX_GOOD_LS]  # shorthand, avg number of candidates needed to get all good cands
-            doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
-            doc['fifteen'] = ng_avg[15]  # shorthand, avg number of candidates needed to get 15 good cands (about 2/3)
-            
-            print doc
-            self._stats_process.insert(doc)
 
                 
 class InitializationDB():
@@ -183,20 +140,18 @@ class InitializationDB():
 
     
 if __name__ == "__main__":
-    s_db = Stats_Database()
-    s_db.process_stats_new()
-    """
+    #s_db = Stats_Database(clear=False, extension="_exclusion")
+    #s_db.process_stats_new()
     m_db = M_Database()
-    from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex
+    from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex, eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield
     hits = 0
     for A in m_db._all_data:
         for B in m_db._all_data[A]:
             for anion in m_db._all_data[A][B]:
                 data = m_db._all_data[A][B][anion]
-                if eval_fitness_complex(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
-                    #print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),",
-                    print '[{}, {}, {}],'.format(A, anion, B),
+                if eval_fitness_simple_oxide_shield(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
+                    #print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),"
+                    print '({}, {}, {}),'.format(A, B, anion),
                     hits +=1
     
     print hits
-    """

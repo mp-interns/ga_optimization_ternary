@@ -4,7 +4,7 @@ from __future__ import division
 '''
 Created on Jul 11, 2012
 '''
-from ga_optimization_ternary.database import MAX_GOOD_LS, NUM_CANDS
+from ga_optimization_ternary.database import GOOD_CANDS_LS
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
