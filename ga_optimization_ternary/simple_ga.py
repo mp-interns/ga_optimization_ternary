@@ -137,7 +137,11 @@ class StatTrack():
         return self.generation_ncandidates_all[-1] - self.generation_ncandidates_all[-2]
         
     def evolve_callback(self, ga):
-        ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
+        if self.tournament_rate != 2: 
+            ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
+        else:
+            ga.getPopulation().setParams(tournamentPool=2)
+        
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
         if cands_added < breakout_cutoff:
@@ -206,7 +210,7 @@ def main_loop():
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05, 0.1, 0.25]
+    tournament_rates = [0.05, 0.1, 0.25, 2]
     mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5, 0.75]
     nichings = [False]  # TODO: implement True
