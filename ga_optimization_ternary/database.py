@@ -85,7 +85,7 @@ class Stats_Database():
         good_list = GOOD_CANDS_LS
         
         if application == "OS":
-            good_list= GOOD_CANDS_OS
+            good_list = GOOD_CANDS_OS
             
         
         for key in self._stats_raw.distinct("unique_key"):
