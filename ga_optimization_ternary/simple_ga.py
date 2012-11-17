@@ -386,4 +386,4 @@ def process_serial(all_ps):
         process_parameterset(ps)
 
 if __name__ == "__main__":
-    main_loop()
+    main_loop_OS()
