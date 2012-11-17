@@ -264,7 +264,7 @@ def main_loop_OS():
     ncores = 7
     clear = False
     # clear the Stats DB
-    db = Stats_Database(clear=clear, extension="_shields")
+    db = Stats_Database(clear=clear)
     popsizes = [20, 100, 500, 1000]
     fitness_fncs = [eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield]
     fitness_temps = [1.25, 2.5, 5, 10]
@@ -356,7 +356,7 @@ def process_parameterset(ps):
     iteration = 0
     extension = ""
     if not ps.include_ridiculous:
-        extension = "_exclusion" 
+        extension = "_exclusion"
     if production:
         db = Stats_Database(clear=False, extension=extension)
         if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
