@@ -227,7 +227,7 @@ def main_loop():
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05, 0.1, 0.25, 2]  # 2 means always pick 2 from the population
+    tournament_rates = [0.05, 0.1, 2]  # 2 means always pick 2 from the population
     mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5, 0.75]
     nichings = [False]  # TODO: implement True
@@ -271,7 +271,7 @@ def main_loop_OS():
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05, 0.1, 0.25, 2]  # 2 means always pick 2 from the population
+    tournament_rates = [0.05, 0.1, 2]  # 2 means always pick 2 from the population
     mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5, 0.75]
     nichings = [False]  # TODO: implement True
