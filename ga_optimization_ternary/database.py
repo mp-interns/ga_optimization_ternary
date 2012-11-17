@@ -77,6 +77,7 @@ class Stats_Database():
         
         doc['data'] = it_data
         doc['num_breakouts'] = stat.num_breakouts
+        doc['form_ncand'] = stat.good_attempts
                 
         self._stats_raw.insert(doc)
     

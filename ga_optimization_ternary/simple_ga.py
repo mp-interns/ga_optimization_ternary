@@ -4,6 +4,7 @@ from __future__ import division
 '''
 Created on Mar 14, 2012
 '''
+from pymatgen.core.periodic_table import Element
 
 """
 import logging
@@ -103,7 +104,7 @@ class StatTrack():
         self._candidates_tried_all = set()
         self._candidates_good = set()
         self.generation_ncandidates = [0]
-        self.generation_ncandidates_all = [0]
+        self.generation_ncandidates_all = [0]  # number candidates tried, including exclusions
         self.generation_ngood = [0]
         self._fitness_evaluator = fe
         self.num_breakouts = 0
@@ -112,6 +113,7 @@ class StatTrack():
         self.include_ridiculous = include_ridiculous
         self.excluded_list = get_excluded_list()
         self.good_list = GOOD_CANDS_LS if application == "LS" else GOOD_CANDS_OS
+        self.good_attempts = {}
     
     def updateStats(self, generation_num, population):
         for i in population:
@@ -123,7 +125,22 @@ class StatTrack():
                 
             if cand in self.good_list:
                 self._candidates_good.add(cand)
-        
+                anion_dict = {}
+                anion_dict[0] = "O3"
+                anion_dict[1] = "O2N"
+                anion_dict[2] = "ON2"
+                anion_dict[3] = "N3"
+                anion_dict[4] = "O2F"
+                anion_dict[5] = "OFN"
+                anion_dict[6] = "O2S"
+                
+                anion = anion_dict[cand[2]]
+                a = Element.from_Z(cand[0]).symbol
+                b = Element.from_Z(cand[1]).symbol
+                form_key = a + " " + b + " " + anion
+                if form_key not in self.good_attempts:
+                    self.good_attempts[form_key] = len(self._candidates_tried)
+                
         self.generation_ncandidates.append(len(self._candidates_tried))
         self.generation_ncandidates_all.append(len(self._candidates_tried_all))
         
