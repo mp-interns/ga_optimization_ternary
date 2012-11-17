@@ -137,7 +137,7 @@ class StatTrack():
                 anion = anion_dict[cand[2]]
                 a = Element.from_Z(cand[0]).symbol
                 b = Element.from_Z(cand[1]).symbol
-                form_key = a + " " + b + " " + anion
+                form_key = a + b + anion
                 if form_key not in self.good_attempts:
                     self.good_attempts[form_key] = len(self._candidates_tried)
                 
