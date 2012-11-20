@@ -186,7 +186,7 @@ def run_simulation(pset, max_generations, initial_list=None):
     fe = FitnessEvaluator(pset.fitness_fnc, pset.fitness_temp)
     Consts.CDefScaleLinearMultiplier = pset.fitness_temp
     
-    application = "LS" if "oxide" in pset.fitness_fnc.__name__ else "OS"
+    application = "OS" if "oxide" in pset.fitness_fnc.__name__ else "LS"
     
     st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate, include_ridiculous=pset.include_ridiculous, application=application)
     
