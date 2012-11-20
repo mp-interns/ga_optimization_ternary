@@ -24,7 +24,7 @@ import pickle
 
 GOOD_CANDS_LS = [(3,23,0), (11,51,0), (12,73,1), (20,32,0), (20,50,0), (20,73,1), (38,32,0), (38,50,0), (38,73,1), (39,73,2), (47,41,0), (50,22,0), (55,41,0), (56,31,4), (56,49,4), (56,50,0), (56,73,1), (57,22,1), (57,73,2), (82,31,4)]
 
-GOOD_CANDS_OS = [(20, 50, 0), (37, 41, 0), (38, 22, 0), (38, 50, 0), (55, 73, 0), (56, 49, 4)]
+GOOD_CANDS_OS = [(20, 50, 0), (37, 22, 4), (37, 41, 0), (38, 22, 0), (38, 31, 4), (38, 50, 0), (55, 73, 0), (56, 49, 4)]
 
 NUM_CANDS = 18928
 
@@ -157,8 +157,8 @@ if __name__ == "__main__":
             for anion in m_db._all_data[A][B]:
                 data = m_db._all_data[A][B][anion]
                 if eval_fitness_simple_oxide_shield(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
-                    #print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),"
-                    print '({}, {}, {}),'.format(A, B, anion),
+                    print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),",
+                    print '({}, {}, {}),'.format(A, B, anion)
                     hits +=1
     
     print hits

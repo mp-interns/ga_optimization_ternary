@@ -85,8 +85,32 @@ def init_db_processed():
             processed_coll.insert(out_dict)
         except:
             print entry
+
+
+def fix_db_raw():
+    db_raw = data_raw_coll()
+    update_cnt = 0
+    with open(os.path.join("../data","abo2f.txt")) as f:
+        for line in f:
+            f_name, energy = line.split()[0]+".json", float(line.split()[1])
+            with open(os.path.join("../data/abo2f", f_name)) as m_file:
+                data = json.loads(m_file.read())
+                print data['A'], data['B'], data['anion']
+                db_raw.update({"A": data['A'], "B": data['B'], "anion": data['anion']}, {"$set": {"heat_of_formation_all": energy}})
+                m_file.close()
+                update_cnt += 1
+                print update_cnt
+    
+    print update_cnt
+
+def fudge_gap_in_hf_o2f():
+    db_raw = data_raw_coll()
+    db_raw.update({"A": "In", "B": "Hf", "anion": "O2F"}, {"$set": {"gllbsc_ind-gap": 3.01}})
     
 if __name__ == "__main__":
     # init_db_raw()
+    # fix_db_raw()
+    fudge_gap_in_hf_o2f()
     init_db_processed()
+    
     #find_atomic_range()
