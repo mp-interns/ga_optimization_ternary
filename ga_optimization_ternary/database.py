@@ -130,8 +130,12 @@ class Stats_Database():
                 doc['ng_max'] = ng_max
                 doc['ng_range'] = ng_range
                 doc['all'] = ng_avg[len(good_list)]  # shorthand, avg number of candidates needed to get all good cands
-                doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
-                doc['fifteen'] = ng_avg[15]  # shorthand, avg number of candidates needed to get 15 good cands (about 2/3)
+                doc['half'] = ng_avg[len(good_list) / 2]
+                
+                if application == "LS":
+                    doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
+                    doc['fifteen'] = ng_avg[15]  # shorthand, avg number of candidates needed to get 15 good cands (about 2/3)
+                    
                 print doc
                 self._stats_process.insert(doc)
 
