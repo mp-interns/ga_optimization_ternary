@@ -159,6 +159,7 @@ class StatTrack():
         
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
+        '''
         if cands_added < breakout_cutoff:
             ga.setMutationRate(1.0)
             ga.setCrossoverRate(1.0)
@@ -166,7 +167,7 @@ class StatTrack():
         else:
             ga.setMutationRate(self.mutation_rate)
             ga.setCrossoverRate(0.9)
-        
+        '''
         return False
         
     
@@ -230,6 +231,50 @@ def main_loop():
     tournament_rates = [0.05, 0.1, 2]  # 2 means always pick 2 from the population
     mutation_rates = [0.01, 0.05, 0.1]
     elitisms = [0, 0.1, 0.5, 0.75]
+    nichings = [False]  # TODO: implement True
+    initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
+    initializations = ["none"]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
+
+    all_ps = []
+    for popsize in popsizes:
+        for fitness_fnc in fitness_fncs:
+            for crossover_fnc in crossover_fncs:
+                for selection_fnc in selection_fncs:
+                    for mutator_fnc in mutator_fncs:
+                        for elitism in elitisms:
+                            for niching in nichings:
+                                for initialization_fnc in initialization_fncs:
+                                    for initialization in initializations:
+                                        for m_rate in mutation_rates:
+                                            for fitness_temp in fitness_temps:
+                                                #fitness temp only matters for roulette wheel
+                                                if (fitness_temp == fitness_temps[0] or selection_fnc.__name__ == "GRouletteWheel"):
+                                                    for tournament_rate in tournament_rates:
+                                                        if (tournament_rate == tournament_rates[0] or selection_fnc.__name__ == "GTournamentSelectorAlternative"):
+                                                                ps = ParameterSet(crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutator_fnc, m_rate, initialization_fnc, popsize, elitism, niching, initialization)
+                                                                if not db._stats_raw.find({"unique_key": ps.unique_key()}).count() >= NUM_ITERATIONS:
+                                                                    all_ps.append(ps)  # set up the parameters
+                                                                else:
+                                                                    print "We already have pset:", ps.unique_key()
+
+    print 'the number of parameter sets is', len(all_ps)
+    process_parallel(all_ps, ncores)
+    #process_serial(all_ps)
+
+def main_test():
+    ncores = 2
+    clear = True
+    # clear the Stats DB
+    db = Stats_Database(clear=clear)
+    popsizes = [100]
+    fitness_fncs = [eval_fitness_complex]
+    fitness_temps = [2.5]
+    crossover_fncs = [Crossovers.G1DListCrossoverSinglePoint]
+    selection_fncs = [Selectors.GRouletteWheel]
+    mutator_fncs = [Mutators.G1DListMutatorAllele]
+    tournament_rates = [0.05]  # 2 means always pick 2 from the population
+    mutation_rates = [0.05]
+    elitisms = [0.5]
     nichings = [False]  # TODO: implement True
     initialization_fncs = [Initializators.G1DListInitializatorAllele]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
     initializations = ["none"]  # as of 10/3/2012 this no longer does anything, the initialization is done by the initializations array instead using evolve_callback()
@@ -386,4 +431,4 @@ def process_serial(all_ps):
         process_parameterset(ps)
 
 if __name__ == "__main__":
-    main_loop_OS()
+    main_loop()
