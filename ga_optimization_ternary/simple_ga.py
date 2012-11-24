@@ -159,7 +159,7 @@ class StatTrack():
         
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
         breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
-        '''
+        
         if cands_added < breakout_cutoff:
             ga.setMutationRate(1.0)
             ga.setCrossoverRate(1.0)
@@ -167,7 +167,7 @@ class StatTrack():
         else:
             ga.setMutationRate(self.mutation_rate)
             ga.setCrossoverRate(0.9)
-        '''
+            
         return False
         
     
@@ -262,7 +262,7 @@ def main_loop():
     #process_serial(all_ps)
 
 def main_test():
-    ncores = 2
+    ncores = 1
     clear = True
     # clear the Stats DB
     db = Stats_Database(clear=clear)
@@ -431,4 +431,4 @@ def process_serial(all_ps):
         process_parameterset(ps)
 
 if __name__ == "__main__":
-    main_loop()
+    main_test()
