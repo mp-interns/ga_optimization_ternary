@@ -158,10 +158,9 @@ class StatTrack():
             ga.getPopulation().setParams(tournamentPool=2)
         
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
-        breakout_cutoff = (int)(math.ceil(0.1 * len(ga.getPopulation().internalPop)))
         
-        if cands_added < breakout_cutoff:
-            ga.setMutationRate(1.0)
+        if cands_added == 0:
+            ga.setMutationRate(0.4)
             ga.setCrossoverRate(1.0)
             self.num_breakouts += 1
         else:
@@ -209,6 +208,7 @@ def run_simulation(pset, max_generations, initial_list=None):
         ga.setElitismReplacement((int)(math.ceil(pset.elitism_num * pset.popsize)))
     else:
         ga.setElitism(False)
+        ga.setElitismReplacement(0)
     
     ga.setMutationRate(pset.mutation_rate)
     # TODO: figure out niching
@@ -222,7 +222,7 @@ def main_loop():
     clear = False
     # clear the Stats DB
     db = Stats_Database(clear=clear)
-    popsizes = [20, 100, 500, 1000]
+    popsizes = [100, 500, 1000]
     fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
     fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
@@ -310,7 +310,7 @@ def main_loop_OS():
     clear = False
     # clear the Stats DB
     db = Stats_Database(clear=clear)
-    popsizes = [20, 100, 500, 1000]
+    popsizes = [100, 500, 1000]
     fitness_fncs = [eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield]
     fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
