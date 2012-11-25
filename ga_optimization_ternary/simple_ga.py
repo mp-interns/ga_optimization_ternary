@@ -208,7 +208,6 @@ def run_simulation(pset, max_generations, initial_list=None):
         ga.setElitismReplacement((int)(math.ceil(pset.elitism_num * pset.popsize)))
     else:
         ga.setElitism(False)
-        ga.setElitismReplacement(0)
     
     ga.setMutationRate(pset.mutation_rate)
     # TODO: figure out niching
