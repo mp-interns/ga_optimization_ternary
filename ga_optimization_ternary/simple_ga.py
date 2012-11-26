@@ -395,7 +395,7 @@ def main_loop_exclusions():
 
 def process_parameterset(ps):
     production = True
-    max_generations = 20000  # should always work...(hopefully)
+    max_generations = 50000  # should always work...(hopefully)
     i_db = InitializationDB()
     iteration = 0
     extension = ""
