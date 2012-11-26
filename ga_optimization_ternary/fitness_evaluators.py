@@ -142,6 +142,57 @@ def eval_fitness_complex(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb
         return max(gap_ind_score, gap_dir_score) + stab_score
 
 
+def eval_fitness_complex_product(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
+        stab_score = 0
+        gap_dir_score = 0
+        gap_ind_score = 0
+        
+        if (gap_dir >= 1.5 and gap_dir <= 3):
+            gap_dir_score += 10
+        elif gap_dir == 0:
+            gap_dir_score += 0
+        else:
+            gap_dir_score += 33 * gaussian_pdf(gap_dir, 2.25)
+            
+        if (gap_ind >= 1.5 and gap_ind <= 3):
+            gap_ind_score += 10
+        elif gap_ind == 0:
+            gap_ind_score += 0
+        else:
+            gap_ind_score += 33 * gaussian_pdf(gap_ind, 2.25)
+            
+        if heat_of_formation <= 0.2:
+            stab_score = 10
+        else:
+            stab_score = 20 * (1-1/(1+math.exp(((-heat_of_formation) + 0.2) * 3.5)))
+        
+        if vb_dir >= 5.73:
+            gap_dir_score += 5
+        else:
+            distance = (5.73 - vb_dir) * 5
+            gap_dir_score += 10 * (1-1/(1+math.exp(-distance)))
+         
+        if vb_ind >= 5.73:
+            gap_ind_score += 5
+        else:
+            distance = (5.73 - vb_ind) * 5
+            gap_ind_score += 10 * (1-1/(1+math.exp(-distance)))
+             
+        if cb_dir <= 4.5:
+            gap_dir_score += 5
+        else:
+            distance = (cb_dir - 4.5) * 5
+            gap_dir_score += 10 * (1-1/(1+math.exp(-distance)))
+        
+        if cb_ind <= 4.5:
+            gap_ind_score += 5
+        else:
+            distance = (cb_ind - 4.5) * 5
+            gap_ind_score += 10 * (1-1/(1+math.exp(-distance)))
+            
+        return max(gap_ind_score, gap_dir_score) * stab_score * 0.15
+    
+
 def eval_fitness_simple(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
         stab_score = 0
         gap_dir_score = 0
@@ -179,6 +230,9 @@ def eval_fitness_simple_exclusion():
 def eval_fitness_complex_exclusion():
     pass
 
+def eval_fitness_complex_product_exclusion():
+    pass
+
 
 def eval_fitness_complex_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
         stab_score = 0
@@ -210,6 +264,38 @@ def eval_fitness_complex_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_di
             gap_ind_score += 27.13 * gaussian_pdf(vb_ind, 6.6)
         
         return gap_score + stab_score + max(gap_ind_score, gap_dir_score)
+
+
+def eval_fitness_complex_product_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
+        stab_score = 0
+        gap_score = 0
+        gap_dir_score = 0
+        gap_ind_score = 0
+        
+        if gap_dir >= 3:
+            gap_score += 10
+        elif gap_dir == 0:
+            gap_score = 0
+        else:
+            distance = (3 - gap_dir) * 5
+            gap_score += 20 * (1-1/(1+math.exp(-distance)))
+        
+        if heat_of_formation <= 0.2:
+            stab_score = 10
+        else:
+            stab_score = 20 * (1-1/(1+math.exp(((-heat_of_formation) + 0.2) * 3.5)))
+        
+        if (vb_dir >= 6.2 and vb_dir <= 7):
+            gap_dir_score += 10
+        else:
+            gap_dir_score += 27.13 * gaussian_pdf(vb_dir, 6.6)
+        
+        if (vb_ind >= 6.2 and vb_ind <= 7):
+            gap_ind_score += 10
+        else:
+            gap_ind_score += 27.13 * gaussian_pdf(vb_ind, 6.6)
+        
+        return gap_score/10 * stab_score/10 * max(gap_ind_score, gap_dir_score)/10 * 30
 
 
 def eval_fitness_simple_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir, cb_dir, vb_ind, cb_ind):
