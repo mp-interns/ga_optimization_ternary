@@ -14,7 +14,8 @@ logging.warning('Logging enabled')
 
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex,\
     eval_fitness_simple_exclusion, eval_fitness_complex_exclusion,\
-    eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield
+    eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield,\
+    eval_fitness_complex_product, eval_fitness_complex_product_oxide_shield
 from collections import OrderedDict
 from ga_optimization_ternary.database import GOOD_CANDS_LS,\
     InitializationDB, GOOD_CANDS_OS
@@ -222,7 +223,7 @@ def main_loop():
     # clear the Stats DB
     db = Stats_Database(clear=clear)
     popsizes = [100, 500, 1000]
-    fitness_fncs = [eval_fitness_simple, eval_fitness_complex]
+    fitness_fncs = [eval_fitness_simple, eval_fitness_complex, eval_fitness_complex_product]
     fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
@@ -266,7 +267,7 @@ def main_test():
     # clear the Stats DB
     db = Stats_Database(clear=clear)
     popsizes = [100]
-    fitness_fncs = [eval_fitness_complex]
+    fitness_fncs = [eval_fitness_complex_product]
     fitness_temps = [2.5]
     crossover_fncs = [Crossovers.G1DListCrossoverSinglePoint]
     selection_fncs = [Selectors.GRouletteWheel]
@@ -310,7 +311,7 @@ def main_loop_OS():
     # clear the Stats DB
     db = Stats_Database(clear=clear)
     popsizes = [100, 500, 1000]
-    fitness_fncs = [eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield]
+    fitness_fncs = [eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield, eval_fitness_complex_product_oxide_shield]
     fitness_temps = [1.25, 2.5, 5, 10]
     crossover_fncs = [Crossovers.G1DListCrossoverUniform, Crossovers.G1DListCrossoverSinglePoint, Crossovers.G1DListCrossoverTwoPoint]
     selection_fncs = [Selectors.GRouletteWheel, Selectors.GTournamentSelectorAlternative, Selectors.GUniformSelector]
