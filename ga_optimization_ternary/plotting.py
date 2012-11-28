@@ -5,8 +5,9 @@ from __future__ import division
 Created on Jul 6, 2012
 '''
 from ga_optimization_ternary.database import M_Database, Stats_Database, NUM_CANDS,\
-    GOOD_CANDS_LS
-from ga_optimization_ternary.utils import get_reference_array
+    GOOD_CANDS_LS, GOOD_CANDS_OS
+from ga_optimization_ternary.utils import get_reference_array,\
+    get_reference_array_OS
 from ga_optimization_ternary import ranked_list_optimization
 from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill
 
@@ -45,6 +46,7 @@ def get_pretty_name(ugly_name):
     d["GTournamentSelectorAlternative-0.25-1.25"] = "T-0.25"
     d["GTournamentSelectorAlternative-0.05-1.25"] = "T-0.05"
     d["GTournamentSelectorAlternative-0.1-1.25"] = "T-0.10"
+    d["GTournamentSelectorAlternative-2-1.25"] = "T-Bin"
     d["GRouletteWheel-0.05-1.25"] = "R-1.25"
     d["GRouletteWheel-0.05-2.5"] = "R-2.5"
     d["GRouletteWheel-0.05-5"] = "R-5"
@@ -318,7 +320,47 @@ class TenAllPlot():
             x.append(get_reference_array()[10]/data['ten'])
             y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
         plt.scatter(x, y)
+
+
+class LSOSPlot():
+
+    def __init__(self, format=None):
+        plt.figure(1, figsize=(8,6))
+        self.db = Stats_Database()
+        self.stats_process = self.db._stats_process
+        
+        self.db_os = Stats_Database(extension="_OS")
+        self.stats_process_os = self.db_os._stats_process
+        
+        print self.stats_process_os.count()
+        
+        self.fontname = "Trebuchet MS"
+        self.fontsize = 14
+        
+        self.get_data()
+        
+        plt.xlabel("Efficiency (one-photon light splitters)", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Efficiency (photoanode oxide shields)", fontname=self.fontname, fontsize=self.fontsize)
+        
+        if format:
+            plt.savefig("lsos_plot."+format)
+        else:
+            plt.show()
     
+    def get_data(self):
+        x = []
+        y = []
+        for data in self.stats_process.find({}):
+            unique_key = data['unique_key']
+            unique_key = unique_key.replace("eval_fitness_complex", "eval_fitness_complex_oxide_shield")
+            unique_key = unique_key.replace("eval_fitness_simple", "eval_fitness_simple_oxide_shield")
+            data2 = self.stats_process_os.find_one({"unique_key":unique_key})
+            
+            x.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
+            y.append(get_reference_array_OS()[len(GOOD_CANDS_OS)]/data2['all'])
+        plt.scatter(x, y)
+
+
 class DataTable():
     
     def __init__(self):
@@ -333,21 +375,24 @@ class DataTable():
 if __name__ == "__main__":
     format = "png"
     
-    print get_reference_array()[10]/559
-    print get_reference_array()[20]/2207
+    #print get_reference_array()[10]/9.5
+    #print get_reference_array()[20]/3671
+    
     if format:
+        LSOSPlot(format=format)
         #PerformancePlot(format=format)
-        #ComparisonPlot(format=format)
+        # ComparisonPlot(format=format)
         #ParametersPlot(format=format)
-        PerformancePlotExclusion(format=format)
+        #PerformancePlotExclusion(format=format)
         #TenAllPlot(format=format)
     
     else:
-        TenAllPlot()
-        PerformancePlot()
-        ComparisonPlot()
-        ParametersPlot(criteria="all")
-        ParametersPlot(criteria="ten")
+        LSOSPlot()
+        #TenAllPlot()
+        #PerformancePlot()
+        #ComparisonPlot()
+        #ParametersPlot()
         plt.show()
     
     # DataTable()
+    

@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
-def gaussian_pdf(x, mean=0):
-    return (1/math.sqrt(2*math.pi))*math.exp(-0.5*(x-mean)*(x-mean))
+def gaussian_pdf(x, mean=0, width = 0.5):
+    return (1/math.sqrt(2*math.pi))*math.exp(-width*(x-mean)*(x-mean))
 
-class FitnessPlot():
+class FitnessPlotOS():
 
     def __init__(self, format=None):
         plt.figure(1, figsize=(16, 8))
@@ -28,7 +28,7 @@ class FitnessPlot():
         self.lw = 4
         self.fontsize = 14
         
-        params = [("Formation E (eV)", "Discontinuous"), ("Formation E (eV)", "Smooth"), ("Band Gap (eV)", "Discontinuous"), ("Band Gap (eV)", "Smooth"), ("Band edge distance (eV)", "Discontinuous"), ("Band edge distance (eV)", "Smooth")]
+        params = [("Formation E (eV)", "Discontinuous"), ("Formation E (eV)", "Smooth"), ("Band Gap (eV)", "Discontinuous"), ("Band Gap (eV)", "Smooth"), ("Band edge position (eV)", "Discontinuous"), ("Band edge position (eV)", "Smooth")]
         plt.subplot(3, 2, 1)
         for idx, param in enumerate(params):
             plt.subplot(3, 2, idx+1)
@@ -67,8 +67,8 @@ class FitnessPlot():
             else:
                 y = [gap_simple(val) for val in x]
 
-        if parameter[0] == "Band edge distance (eV)":
-            x = get_interval(-1, 2, 0.01)
+        if parameter[0] == "Band edge position (eV)":
+            x = get_interval(-1, 5, 0.01)
             if parameter[1] == "Smooth":
                 y = [edge_complex(val) for val in x]
             else:
@@ -101,31 +101,36 @@ def heat_of_formation_simple(heat_of_formation):
 
 
 def gap_complex(gap_dir):
-    if gap_dir == 0:
-        return 0
-    if (gap_dir >= 1.5 and gap_dir <= 3):
-        return 10
+    gap_score = 0
+    if gap_dir >= 3:
+        gap_score += 10
+    elif gap_dir == 0:
+        gap_score = 0
     else:
-        return 33 * gaussian_pdf(gap_dir, 2.25)
+        distance = (3 - gap_dir) * 5
+        gap_score += 20 * (1-1/(1+math.exp(-distance)))
+    
+    return gap_score
 
 
 def gap_simple(gap_dir):
-    if (gap_dir >= 1.5 and gap_dir <= 3):
+    if (gap_dir >= 3):
         return 10
     return 0
 
 
-def edge_complex(cb_dir):
-    if cb_dir <= 0:
-        return 5
+def edge_complex(vb_dir):
+    gap_dir_score = 0
+    if (vb_dir >= 1.7 and vb_dir <= 2.5):
+        gap_dir_score += 10
     else:
-        distance = cb_dir * 5
-        return 10 * (1-1/(1+math.exp(-distance)))
+        gap_dir_score += 55 * gaussian_pdf(vb_dir, 2.1, 5)
+    return gap_dir_score
 
 
 def edge_simple(cb_dir):
-    if cb_dir <= 0:
-        return 5
+    if (cb_dir >= 1.7 and cb_dir <= 2.5):
+        return 10
     return 0
 
                           
@@ -139,12 +144,11 @@ def get_interval(min, max, interval):
 
 if __name__ == "__main__":
     format = None
-    
     if format:
-        FitnessPlot(format=format)
+        FitnessPlotOS(format=format)
     
     else:
-        FitnessPlot()
+        FitnessPlotOS()
     
     
 """

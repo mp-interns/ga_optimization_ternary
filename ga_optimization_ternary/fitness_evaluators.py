@@ -17,8 +17,8 @@ from database import M_Database
 import math
 
 
-def gaussian_pdf(x, mean=0):
-    return (1/math.sqrt(2*math.pi))*math.exp(-0.5*(x-mean)*(x-mean))
+def gaussian_pdf(x, mean=0, width = 0.5):
+    return (1/math.sqrt(2*math.pi))*math.exp(-width*(x-mean)*(x-mean))
 
 
 class FitnessEvaluator():
@@ -256,12 +256,12 @@ def eval_fitness_complex_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_di
         if (vb_dir >= 6.2 and vb_dir <= 7):
             gap_dir_score += 10
         else:
-            gap_dir_score += 27.13 * gaussian_pdf(vb_dir, 6.6)
+            gap_dir_score += 55 * gaussian_pdf(vb_dir, 6.6, 5)
         
         if (vb_ind >= 6.2 and vb_ind <= 7):
             gap_ind_score += 10
         else:
-            gap_ind_score += 27.13 * gaussian_pdf(vb_ind, 6.6)
+            gap_ind_score += 55 * gaussian_pdf(vb_ind, 6.6, 5)
         
         return gap_score + stab_score + max(gap_ind_score, gap_dir_score)
 
@@ -288,12 +288,12 @@ def eval_fitness_complex_product_oxide_shield(gap_dir, gap_ind, heat_of_formatio
         if (vb_dir >= 6.2 and vb_dir <= 7):
             gap_dir_score += 10
         else:
-            gap_dir_score += 27.13 * gaussian_pdf(vb_dir, 6.6)
+            gap_dir_score += 55 * gaussian_pdf(vb_dir, 6.6, 5)
         
         if (vb_ind >= 6.2 and vb_ind <= 7):
             gap_ind_score += 10
         else:
-            gap_ind_score += 27.13 * gaussian_pdf(vb_ind, 6.6)
+            gap_ind_score += 55 * gaussian_pdf(vb_ind, 6.6, 5)
         
         return gap_score/10 * stab_score/10 * max(gap_ind_score, gap_dir_score)/10 * 30
 
@@ -313,17 +313,11 @@ def eval_fitness_simple_oxide_shield(gap_dir, gap_ind, heat_of_formation, vb_dir
         if heat_of_formation <= 0.2:
             stab_score += 5
         
-        if (vb_dir >= 6.2):
-            gap_dir_score += 5
+        if (vb_dir >= 6.2 and vb_dir <= 7):
+            gap_dir_score += 10
         
-        if (vb_dir <= 7):
-            gap_dir_score += 5
-        
-        if (vb_ind >= 6.2):
-            gap_ind_score += 5
-        
-        if (vb_ind <= 7):
-            gap_ind_score += 5
+        if (vb_ind >= 6.2 and vb_ind <= 7):
+            gap_ind_score += 10
         
         return gap_score + stab_score + max(gap_ind_score, gap_dir_score)
 
