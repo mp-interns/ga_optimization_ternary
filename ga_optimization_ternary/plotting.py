@@ -18,6 +18,7 @@ __maintainer__ = "Anubhav Jain"
 __email__ = "ajain@lbl.gov"
 __date__ = "Jul 6, 2012"
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pymongo
 import numpy as np
@@ -256,6 +257,9 @@ class ParametersPlot():
             self.get_data(param)
         
         if format:
+            mpl.rcParams['figure.figsize'] = (16, 8)
+            print mpl.rcParams['figure.figsize']
+            
             plt.savefig("parameters_plot."+format)
         else:
             plt.show()
@@ -314,13 +318,27 @@ class TenAllPlot():
             plt.show()
     
     def get_data(self):
-        x = []
-        y = []
-        for data in self.stats_process.find({}):
-            x.append(get_reference_array()[10]/data['ten'])
-            y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
-        plt.scatter(x, y)
+        
+        colors = {100: "tomato", 500: "dodgerblue", 1000: "springgreen"}
+        markers = {100: "s", 500: "o", 1000: "D"}
 
+        for popsize in colors:
+            x = []
+            y = []
+            for data in self.stats_process.find({"parameters.popsize":popsize}):
+                x.append(get_reference_array()[10]/data['ten'])
+                y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
+            plt.scatter(x, y, c=[colors[popsize]]*len(x), marker=markers[popsize], s = [30]*len(x), label="popsize="+str(popsize))
+        
+        plt.legend(loc=4)
+        yxis = plt.ylim()
+        plt.ylim(0.75, yxis[1])
+        xxis = plt.xlim()
+        plt.xlim(0.75, xxis[1])
+        plt.xticks(np.arange(1,plt.xlim()[1], 1))
+        plt.yticks(np.arange(1,plt.ylim()[1], 1))
+        
+        plt.annotate("best GA", xy= (9.5, 4.2), xytext=(9, 4.3), arrowprops={"arrowstyle":"->", "connectionstyle":"arc"})
 
 class LSOSPlot():
 
@@ -373,26 +391,27 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    format = "png"
+    format = None
     
     #print get_reference_array()[10]/9.5
     #print get_reference_array()[20]/3671
     
     if format:
+        mpl.rcParams['savefig.dpi'] = 160
         LSOSPlot(format=format)
         #PerformancePlot(format=format)
         # ComparisonPlot(format=format)
-        #ParametersPlot(format=format)
+        ParametersPlot(format=format)
         #PerformancePlotExclusion(format=format)
         #TenAllPlot(format=format)
     
     else:
-        LSOSPlot()
-        #TenAllPlot()
+        #LSOSPlot()
+        TenAllPlot()
         #PerformancePlot()
         #ComparisonPlot()
         #ParametersPlot()
-        plt.show()
+        #plt.show()
     
     # DataTable()
     
