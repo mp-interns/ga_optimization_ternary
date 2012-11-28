@@ -37,7 +37,7 @@ class FitnessPlotOS():
         plt.subplots_adjust(left=0.125, bottom=None, right=None, top=None, wspace=0.25, hspace=0.5)
         
         if format:
-            plt.savefig("fitness_plot."+format)
+            plt.savefig("fitness_plot_OS."+format)
         else:
             plt.show()
     
@@ -143,7 +143,7 @@ def get_interval(min, max, interval):
     return m_a
 
 if __name__ == "__main__":
-    format = None
+    format = "png"
     if format:
         FitnessPlotOS(format=format)
     

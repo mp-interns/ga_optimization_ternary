@@ -138,7 +138,7 @@ def get_interval(min, max, interval):
     return m_a
 
 if __name__ == "__main__":
-    format = None
+    format = "png"
     
     if format:
         FitnessPlot(format=format)
