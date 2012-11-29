@@ -40,7 +40,7 @@ import multiprocessing
 import math
 
 
-NUM_ITERATIONS = 20
+NUM_ITERATIONS = 10
 
 """
 def transform_list(my_list):
