@@ -132,7 +132,7 @@ class Stats_Database():
                 doc['ng_max'] = ng_max
                 doc['ng_range'] = ng_range
                 doc['all'] = ng_avg[len(good_list)]  # shorthand, avg number of candidates needed to get all good cands
-                doc['half'] = ng_avg[len(good_list) / 2]
+                doc['half'] = ng_avg[int(len(good_list) / 2)]
                 
                 doc['form_ncand'] = {}
                 
@@ -155,8 +155,9 @@ class InitializationDB():
 
     
 if __name__ == "__main__":
-    #s_db = Stats_Database(clear=False, extension="_exclusion")
-    #s_db.process_stats_new()
+    s_db = Stats_Database(clear=False)
+    s_db.process_stats_new(application="OS")
+    """
     m_db = M_Database()
     from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex, eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield
     hits = 0
@@ -171,3 +172,4 @@ if __name__ == "__main__":
                     hits +=1
     
     print hits
+    """
