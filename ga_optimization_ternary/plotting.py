@@ -10,6 +10,7 @@ from ga_optimization_ternary.utils import get_reference_array,\
     get_reference_array_OS
 from ga_optimization_ternary import ranked_list_optimization
 from ga_optimization_ternary.ranked_list_optimization import get_ranked_list_goldschmidt_halffill
+from twisted.test.test_text import lineWidth
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -55,6 +56,35 @@ def get_pretty_name(ugly_name):
     d["GRouletteWheel-0.05-20"] = "R-20"
     d["GUniformSelector-0.05-1.25"] = "U-0"
     return d.get(ugly_name, ugly_name)
+
+
+def get_short_name(ugly_name):
+    d = {}
+    d['crossover_fnc'] = "X"
+    d['mutation_rate'] = "M"
+    d['elitism_num'] = "E"
+    d['fitness_fnc'] = "F"
+    d['selection_overall'] = "S"
+    d['popsize'] = "P"
+    
+    d['G1DListCrossoverSinglePoint'] = "1P"
+    d['G1DListCrossoverTwoPoint'] = "2P"
+    d['G1DListCrossoverUniform'] = "U"
+    d['eval_fitness_partial'] = "S"
+    d['eval_fitness_simple'] = "D"
+    d['eval_fitness_complex'] = "S"
+    d["GTournamentSelectorAlternative-0.25-1.25"] = "T-0.25"
+    d["GTournamentSelectorAlternative-0.05-1.25"] = "T-0.05"
+    d["GTournamentSelectorAlternative-0.1-1.25"] = "T-0.10"
+    d["GTournamentSelectorAlternative-2-1.25"] = "T-Bin"
+    d["GRouletteWheel-0.05-1.25"] = "R-1.25"
+    d["GRouletteWheel-0.05-2.5"] = "R-2.5"
+    d["GRouletteWheel-0.05-5"] = "R-5"
+    d["GRouletteWheel-0.05-10"] = "R-10"
+    d["GRouletteWheel-0.05-20"] = "R-20"
+    d["GUniformSelector-0.05-1.25"] = "U-0"
+    return d.get(ugly_name, ugly_name)
+
 
 class PerformancePlot():
 
@@ -299,6 +329,83 @@ class ParametersPlot():
         plt.xlim(0, xlocations[-1] + width * 2)
 
 
+
+class HeatMapPlot():
+
+    def __init__(self, format=None, criteria="all"):
+        plt.figure(1, figsize=(12,8))
+        self.db = Stats_Database()
+        self.stats_process = self.db._stats_process
+        self.num_exps = self.stats_process.count()
+        self.criteria = criteria
+        self.fontname = "Trebuchet MS"
+        self.fontsize = 14
+        
+        params = ["crossover_fnc", "popsize", "selection_overall", "elitism_num", "fitness_fnc", "mutation_rate"]
+        param_vals = []
+        
+        
+        for p1 in params:
+            p1_labels = self.stats_process.distinct("parameters."+p1)
+            if "-" not in str(p1_labels[0]):
+                p1_labels.sort()
+            else:
+                p1_labels.sort(key=lambda label: ord(label.split("-")[0][1])*10 + float(label.split("-")[1])+float(label.split("-")[2]))
+            
+            for p1x in p1_labels:
+                param_vals.append((p1,p1x))
+        
+        values = []
+        
+        for x1 in param_vals:
+            for y1 in param_vals:
+                if x1[0] == y1[0] and x1[1] != y1[1]:
+                    values.append(0.5)
+                elif x1[0] == y1[0]:
+                    constraint = {"parameters."+x1[0]:x1[1]}
+                    values.append(self.get_score(constraint))
+                else:
+                    constraint = {"parameters."+x1[0]:x1[1], "parameters."+y1[0]:y1[1]}
+                    values.append(self.get_score(constraint))
+                
+        values = np.array(values)
+        values.shape = (len(param_vals),len(param_vals))
+              
+        plt.hot()
+        plt.pcolormesh(values)
+        x = [str(get_short_name(x[1]))+"="+get_short_name(x[0]) for x in param_vals]
+        ticklok = [z+0.5 for z in range(0, len(param_vals))]
+        plt.xticks(ticklok, x, ha='center', rotation=90, fontsize=14, fontname=self.fontname)
+        plt.yticks(ticklok, x, ha='right', fontsize=14, fontname=self.fontname)
+        
+        last_name = param_vals[0][0]
+        
+        for idx, label in enumerate(param_vals):
+            if label[0] != last_name:
+                plt.plot([idx,idx], [0, len(param_vals)], color="darkslategray", linewidth=3)
+                plt.plot([0, len(param_vals)], [idx,idx],  color="darkslategray", linewidth=3)
+                last_name = label[0]
+        
+        plt.xlim(0, len(param_vals))
+        plt.ylim(0, len(param_vals))
+        plt.colorbar() 
+            
+        if format:
+            plt.savefig("heatmap_plot."+format)
+        else:
+            plt.show()
+    
+    def get_score(self, constraint):
+        m_sum = 0.0
+        npoints = 0.0
+        num_to_average = 50000  # average the num_to_average BEST runs
+        for item in self.stats_process.find(constraint, {"all": 1}, sort=[("all",pymongo.ASCENDING)]).limit(num_to_average):
+            m_sum = m_sum + get_reference_array()[len(GOOD_CANDS_LS)] / item["all"]
+            npoints = npoints + 1
+        return (m_sum / npoints)
+    
+
+
 class BreakoutPlot():
 
     def __init__(self, format=None):
@@ -440,15 +547,16 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    format = "png"
-    
+    format = None
+
     #print get_reference_array()[10]/9.5
     #print get_reference_array()[20]/3671
     
     if format:
         mpl.rcParams['savefig.dpi'] = 160
         #LSOSPlot(format=format)
-        BreakoutPlot(format=format)
+        HeatMapPlot(format=format)
+        #BreakoutPlot(format=format)
         #PerformancePlot(format=format)
         #ComparisonPlot(format=format)
         #ParametersPlot(format=format)
@@ -463,6 +571,6 @@ if __name__ == "__main__":
         #ComparisonPlot()
         #ParametersPlot()
         #BreakoutPlot()
-        plt.show()
+        HeatMapPlot()
     
     # DataTable()
