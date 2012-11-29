@@ -70,9 +70,9 @@ class PerformancePlot():
         
         self.get_reference_data()  # reference
         # self.get_goldschmidt_data()  # goldschmidt reference
-        self.get_data(0, "best GA", "blue", pos="right", crit="mixed")  # best
+        self.get_data(0, "best GA", "dodgerblue", pos="right", crit="mixed")  # best
         # self.get_data(0, "best GA (ten)", "green", pos="right", crit="ten")  # best
-        self.get_data(num_exps-1, "worst GA", "red", "right")  # ~worst
+        self.get_data(num_exps-1, "worst GA", "tomato", "right")  # ~worst
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
         plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
@@ -132,8 +132,8 @@ class PerformancePlotExclusion():
         self.fontname = "Trebuchet MS"
         
         self.get_goldschmidt_data()  # goldschmidt reference
-        self.get_data(0, "best GA", "blue", pos="right", crit="all")  # best
-        self.get_data_exclusion(0, "best GA + chemical", "green", pos="left", crit="all")  # best
+        self.get_data(0, "best GA", "dodgerblue", pos="right", crit="all")  # best
+        self.get_data_exclusion(0, "best GA + chemical", "#00B31B", pos="left", crit="all")  # best
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
         plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
@@ -182,7 +182,7 @@ class PerformancePlotExclusion():
         plt.annotate(label, xy = (x[(int)(len(GOOD_CANDS_LS)*19/20)], y[(int)(len(GOOD_CANDS_LS)*19/20)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
     def get_goldschmidt_data(self):
-        color = [.996, .415, 0]
+        color = "tomato"
         y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt_halffill())
         plt.errorbar(x, y, lw=self.lw, color=color)
         plt.annotate("chemical", xy = (x[19], y[19]), xytext = (10, 15), color=color, textcoords = 'offset points', ha = 'right', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
@@ -297,7 +297,49 @@ class ParametersPlot():
         plt.xticks(xlocations + width/2, pretty_labels, fontname=self.fontname)
         plt.yticks(fontname=self.fontname)
         plt.xlim(0, xlocations[-1] + width * 2)
+
+
+class BreakoutPlot():
+
+    def __init__(self, format=None):
+        plt.figure(3)
+        self.db = Stats_Database()
+        self.stats_process = self.db._stats_process
+        self.fontname = "Trebuchet MS"
+        self.fontsize = 14
+        
+        self.get_data()
+        
+        plt.xlabel("Average number of global mutations", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Efficiency (all 20 materials)", fontname=self.fontname, fontsize=self.fontsize)
+        
+        if format:
+            plt.savefig("breakout_plot."+format)
+        else:
+            plt.show()
     
+    def get_data(self):
+        
+        colors = {100: "tomato", 500: "dodgerblue", 1000: "springgreen"}
+        markers = {100: "s", 500: "o", 1000: "D"}
+
+        for popsize in colors:
+            x = []
+            y = []
+            for data in self.stats_process.find({"parameters.popsize":popsize}):
+                x.append(data['breakouts_avg'])
+                y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
+            plt.scatter(x, y, c=[colors[popsize]]*len(x), marker=markers[popsize], s=30, label="popsize="+str(popsize))
+        
+        plt.legend(loc=0)
+        yxis = plt.ylim()
+        plt.ylim(0.75, yxis[1])
+        plt.yticks(np.arange(1,plt.ylim()[1], 1))
+        
+        xxis = plt.xlim()
+        plt.xlim(0, xxis[1])
+
+
 class TenAllPlot():
 
     def __init__(self, format=None):
@@ -328,7 +370,7 @@ class TenAllPlot():
             for data in self.stats_process.find({"parameters.popsize":popsize}):
                 x.append(get_reference_array()[10]/data['ten'])
                 y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
-            plt.scatter(x, y, c=[colors[popsize]]*len(x), marker=markers[popsize], s = [30]*len(x), label="popsize="+str(popsize))
+            plt.scatter(x, y, c=[colors[popsize]]*len(x), marker=markers[popsize], s=30, label="popsize="+str(popsize))
         
         plt.legend(loc=4)
         yxis = plt.ylim()
@@ -376,9 +418,16 @@ class LSOSPlot():
             
             x.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
             y.append(get_reference_array_OS()[len(GOOD_CANDS_OS)]/data2['all'])
-        plt.scatter(x, y)
+        plt.scatter(x, y, c="dodgerblue", s=30)
+        yxis = plt.ylim()
+        plt.ylim(0.75, yxis[1])
+        xxis = plt.xlim()
+        plt.xlim(0.75, xxis[1])
+        plt.xticks(np.arange(1,plt.xlim()[1], 1))
+        plt.yticks(np.arange(1,plt.ylim()[1], 1))
 
 
+        
 class DataTable():
     
     def __init__(self):
@@ -391,27 +440,29 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    format = None
+    format = "png"
     
     #print get_reference_array()[10]/9.5
     #print get_reference_array()[20]/3671
     
     if format:
         mpl.rcParams['savefig.dpi'] = 160
-        LSOSPlot(format=format)
+        #LSOSPlot(format=format)
+        BreakoutPlot(format=format)
         #PerformancePlot(format=format)
-        # ComparisonPlot(format=format)
-        ParametersPlot(format=format)
+        #ComparisonPlot(format=format)
+        #ParametersPlot(format=format)
         #PerformancePlotExclusion(format=format)
         #TenAllPlot(format=format)
     
     else:
         #LSOSPlot()
-        TenAllPlot()
+        #TenAllPlot()
         #PerformancePlot()
+        #PerformancePlotExclusion()
         #ComparisonPlot()
         #ParametersPlot()
-        #plt.show()
+        #BreakoutPlot()
+        plt.show()
     
     # DataTable()
-    
