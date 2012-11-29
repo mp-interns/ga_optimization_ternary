@@ -17,7 +17,6 @@ __date__ = "Mar 14, 2012"
 import pymongo
 from collections import defaultdict
 from pymatgen.core.periodic_table import Element
-from scipy.interpolate import interp1d
 import numpy as np
 import os
 import pickle
@@ -88,7 +87,6 @@ class Stats_Database():
         if application == "OS":
             good_list = GOOD_CANDS_OS
             
-        
         for key in self._stats_raw.distinct("unique_key"):
             if self._stats_raw.find({"unique_key": key}).count() >= num_iterations:
                 # we have a good param set ... go through the iterations
@@ -96,6 +94,7 @@ class Stats_Database():
                 it_ng_nc = np.zeros((num_iterations, len(good_list) + 1))  # [iteration, numgood] = (# candidates needed)
                 
                 breakouts = []
+                form_ncands = []
                 
                 for it in range(num_iterations):
                     expt = self._stats_raw.find_one({"unique_key":key, "iteration":it})
@@ -108,6 +107,9 @@ class Stats_Database():
                     
                     #add num breakouts
                     breakouts.append(expt['num_breakouts'])
+                    
+                    # add form_ncand
+                    form_ncands.append(expt['form_ncand'])
                     
                     ng = 0  # number good that we're trying to initialize
                     for gen in expt['data']:
@@ -131,6 +133,8 @@ class Stats_Database():
                 doc['ng_range'] = ng_range
                 doc['all'] = ng_avg[len(good_list)]  # shorthand, avg number of candidates needed to get all good cands
                 doc['half'] = ng_avg[len(good_list) / 2]
+                
+                doc['form_ncand'] = {}
                 
                 if application == "LS":
                     doc['ten'] = ng_avg[10]  # shorthand, avg number of candidates needed to get ten good cands
@@ -161,8 +165,9 @@ if __name__ == "__main__":
             for anion in m_db._all_data[A][B]:
                 data = m_db._all_data[A][B][anion]
                 if eval_fitness_simple_oxide_shield(data[0],data[1],data[2], data[3], data[4], data[5], data[6]) >= 30:
-                    print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),",
-                    print '({}, {}, {}),'.format(A, B, anion)
+                    #print '('+Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+"),",
+                    #print '({}, {}, {}),'.format(A, B, anion)
+                    print Element.from_Z(A).symbol+","+Element.from_Z(B).symbol+","+str(anion)+")",data[2],data[0],data[4] - 4.5,data[3]-4.5,data[1],data[6]-4.5,data[5]-4.5
                     hits +=1
     
     print hits
