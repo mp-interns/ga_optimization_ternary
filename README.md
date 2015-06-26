@@ -1,0 +1,1 @@
+Code that powered [Performance of genetic algorithms in search for water splitting perovskites](http://dx.doi.org/10.1007/s10853-013-7448-9) by A. Jain et al. Data set may be obtained upon request from dwinston [at] lbl [dot] gov.
