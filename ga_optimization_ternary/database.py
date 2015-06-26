@@ -155,8 +155,10 @@ class InitializationDB():
 
     
 if __name__ == "__main__":
-    s_db = Stats_Database(clear=False)
-    s_db.process_stats_new(application="OS")
+    s_db = Stats_Database(clear=False, extension="_exclusion")
+    print s_db._stats_process.count()
+    #s_db.process_stats_new()
+    #s_db._stats_process.remove({'parameters.crossover_fnc':'G1DListCrossoverUniform'})
     """
     m_db = M_Database()
     from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex, eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield

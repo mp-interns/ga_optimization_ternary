@@ -15,7 +15,8 @@ logging.warning('Logging enabled')
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex,\
     eval_fitness_simple_exclusion, eval_fitness_complex_exclusion,\
     eval_fitness_simple_oxide_shield, eval_fitness_complex_oxide_shield,\
-    eval_fitness_complex_product, eval_fitness_complex_product_oxide_shield
+    eval_fitness_complex_product, eval_fitness_complex_product_oxide_shield,\
+    eval_fitness_complex_product_exclusion
 from collections import OrderedDict
 from ga_optimization_ternary.database import GOOD_CANDS_LS,\
     InitializationDB, GOOD_CANDS_OS
@@ -40,7 +41,7 @@ import multiprocessing
 import math
 
 
-NUM_ITERATIONS = 10
+NUM_ITERATIONS = 20
 
 """
 def transform_list(my_list):
@@ -351,16 +352,16 @@ def main_loop_OS():
 
 def main_loop_exclusions():
     ncores = 4
-    clear = True
+    clear = False
     # clear the Stats DB
     db = Stats_Database(clear=clear, extension="_exclusion")
     popsizes = [100]
-    fitness_fncs = [eval_fitness_complex_exclusion]
-    fitness_temps = [5]
-    crossover_fncs = [Crossovers.G1DListCrossoverUniform]
-    selection_fncs = [Selectors.GRouletteWheel]
+    fitness_fncs = [eval_fitness_complex_product_exclusion]
+    fitness_temps = [1.25]
+    crossover_fncs = [Crossovers.G1DListCrossoverSinglePoint]
+    selection_fncs = [Selectors.GTournamentSelectorAlternative]
     mutator_fncs = [Mutators.G1DListMutatorAllele]
-    tournament_rates = [0.05]
+    tournament_rates = [2]
     mutation_rates = [0.05]
     elitisms = [0.5]
     nichings = [False]  # TODO: implement True
@@ -431,4 +432,4 @@ def process_serial(all_ps):
         process_parameterset(ps)
 
 if __name__ == "__main__":
-    main_loop()
+    main_loop_exclusions()

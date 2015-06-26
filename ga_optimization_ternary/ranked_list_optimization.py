@@ -296,5 +296,5 @@ def get_stats_OS(ranked_list):
 
 
 if __name__ == "__main__":
-    a = get_excluded_list()
-    print len(a)
+    a = get_stats_OS(get_ranked_list_goldschmidt_halffill())
+    print a

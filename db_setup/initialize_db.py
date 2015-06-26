@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 
 '''
 Created on Mar 13, 2012
 '''
+from pymatgen import Structure, Lattice
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -14,11 +15,9 @@ __date__ = "Mar 13, 2012"
 import pymongo
 import os
 import json
-from pymatgen.core.periodic_table import Element
 
-from pymatgen.core.structure import Structure, Lattice
 
-connection = pymongo.Connection('localhost', 12345)
+connection = pymongo.Connection('localhost', 27017)
 _unc_db = connection.unc
 
 
@@ -38,8 +37,9 @@ def data_process_coll(remove=False):
 
 def init_db_raw():
     raw_coll = data_raw_coll(remove=True)
-    
-    dirs = ["../data/abn3", "../data/abo2f", "../data/abo2n", "../data/abo2s", "../data/abo3", "../data/abofn", "../data/abon2"]
+    path = "/Users/ajain/Documents/papers_proposals/2012Paper_UNCOptimization/data/rawdata"
+    m_dirs = ["abn3", "abo2f", "abo2n", "abo2s", "abo3", "abofn", "abon2"]
+    dirs = [os.path.join(path, d) for d in m_dirs]
     for dir in dirs:
         for f in os.listdir(dir):
             if  '.json' in f:
@@ -83,6 +83,7 @@ def init_db_processed():
             out_dict['sum_magnetic_moments'] = sum(entry['MagneticMoments'])
              
             processed_coll.insert(out_dict)
+            print out_dict
         except:
             print entry
 
@@ -90,10 +91,10 @@ def init_db_processed():
 def fix_db_raw():
     db_raw = data_raw_coll()
     update_cnt = 0
-    with open(os.path.join("../data","abo2f.txt")) as f:
+    with open(os.path.join("/Users/ajain/Documents/papers_proposals/2012Paper_UNCOptimization/data/rawdata","abo2f.txt")) as f:
         for line in f:
             f_name, energy = line.split()[0]+".json", float(line.split()[1])
-            with open(os.path.join("../data/abo2f", f_name)) as m_file:
+            with open(os.path.join("/Users/ajain/Documents/papers_proposals/2012Paper_UNCOptimization/data/rawdata/abo2f", f_name)) as m_file:
                 data = json.loads(m_file.read())
                 print data['A'], data['B'], data['anion']
                 db_raw.update({"A": data['A'], "B": data['B'], "anion": data['anion']}, {"$set": {"heat_of_formation_all": energy}})
@@ -106,11 +107,20 @@ def fix_db_raw():
 def fudge_gap_in_hf_o2f():
     db_raw = data_raw_coll()
     db_raw.update({"A": "In", "B": "Hf", "anion": "O2F"}, {"$set": {"gllbsc_ind-gap": 3.01}})
-    
+
+def export():
+    processed_coll = data_process_coll()
+
+    for i in processed_coll.find():
+        del i['_id']
+        f_name = os.path.join("alldata", "{}{}{}.json".format(i['A'], i['B'],i['anion']))
+        with open(f_name, 'w') as f:
+            f.write(json.dumps(i, indent=4))
+
 if __name__ == "__main__":
-    # init_db_raw()
-    # fix_db_raw()
-    fudge_gap_in_hf_o2f()
-    init_db_processed()
-    
+    #init_db_raw()
+    #fix_db_raw()
+    #fudge_gap_in_hf_o2f()
+    #init_db_processed()
+    export()
     #find_atomic_range()

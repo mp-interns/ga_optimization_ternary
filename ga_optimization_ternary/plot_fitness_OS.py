@@ -79,7 +79,7 @@ class FitnessPlotOS():
         plt.ylabel("Fitness "+parameter[1], fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
-        plt.errorbar(x, y, lw=self.lw, color="tomato")
+        plt.errorbar(x, y, lw=self.lw, color="dodgerblue")
         plt.ylim((0, max(y)+1))
         #plt.xlim((0, NUM_CANDS))
     

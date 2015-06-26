@@ -4,7 +4,8 @@ from __future__ import division
 '''
 Created on Jul 11, 2012
 '''
-from ga_optimization_ternary.database import GOOD_CANDS_LS
+from ga_optimization_ternary.database import GOOD_CANDS_LS, NUM_CANDS,\
+    GOOD_CANDS_OS
 
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
@@ -42,6 +43,8 @@ def _get_prob(k, M, n):
 def get_reference_array():
     return [0.0, 901.380952381, 1802.76190476, 2704.14285714, 3605.52380952, 4506.9047619, 5408.28571429, 6309.66666667, 7211.04761905, 8112.42857143, 9013.80952381, 9915.19047619, 10816.5714286, 11717.952381, 12619.3333333, 13520.7142857, 14422.0952381, 15323.4761905, 16224.8571429, 17126.2380952, 18027.6190476]
 
+def get_reference_array_OS():
+    return [0.0, 2103.22222222, 4206.44444444, 6309.66666667, 8412.88888889, 10516.1111111, 12619.3333333, 14722.5555556, 16825.7777778]
 """
 def _get_prob_bailey(JC, CC, JJ):
     a = (CC + 1)*(CC + CC*CC - 2*CC*JC + JC*(JC - 1)) * comb(CC, JC - 1) / ((JC + 1)*(JC + 2)*comb(CC, JJ))
@@ -86,4 +89,7 @@ def get_random_genomes():
         pickle.dump(r_init, f)
         
 if __name__ == "__main__":
-    print get_reference_array()[20]
+    n = NUM_CANDS
+    ngood = len(GOOD_CANDS_OS)
+    for i in range(ngood + 1):
+        print str(_get_prob(ngood, NUM_CANDS, i))+",",

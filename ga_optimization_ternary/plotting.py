@@ -38,6 +38,7 @@ def get_pretty_name(ugly_name):
     d['GTournamentSelectorAlternative'] = "Tourn."
     d['GUniformSelector'] = "Uniform"
     d['eval_fitness_partial'] = "Smooth"
+    d['eval_fitness_complex_product'] = "Smooth Product"
     d['eval_fitness_simple'] = "Discontinuous"
     d['initialization_fnc'] = "Initialization Function"
     d['G1DListInitializatorAllele'] = "Random"
@@ -73,6 +74,7 @@ def get_short_name(ugly_name):
     d['eval_fitness_partial'] = "S"
     d['eval_fitness_simple'] = "D"
     d['eval_fitness_complex'] = "S"
+    d['eval_fitness_complex_product'] = "SP"
     d["GTournamentSelectorAlternative-0.25-1.25"] = "T-0.25"
     d["GTournamentSelectorAlternative-0.05-1.25"] = "T-0.05"
     d["GTournamentSelectorAlternative-0.1-1.25"] = "T-0.10"
@@ -102,12 +104,13 @@ class PerformancePlot():
         # self.get_goldschmidt_data()  # goldschmidt reference
         self.get_data(0, "best GA", "dodgerblue", pos="right", crit="mixed")  # best
         # self.get_data(0, "best GA (ten)", "green", pos="right", crit="ten")  # best
-        self.get_data(num_exps-1, "worst GA", "tomato", "right")  # ~worst
+        #self.get_data(num_exps-1, "worst GA", "tomato", "right")  # ~worst
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Potential solar water splitting materials", fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
+        plt.xticks(np.arange(0, plt.xlim()[1], 2500))
         plt.ylim((0, len(GOOD_CANDS_LS) + 0.5))
         plt.xlim((0, NUM_CANDS))
         
@@ -121,9 +124,11 @@ class PerformancePlot():
         y = []
         xerr = []
         if crit == "mixed":
-            data = self.stats_process.find({"ten":{"$lte":1060}, "all":{"$lte":4507}}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+            data = self.stats_process.find({"all":{"$lte":3277}}, sort = [("ten", pymongo.ASCENDING)])[(int)(idx)]
+            print data['parameters']
         else:
             data = self.stats_process.find({}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+            print data['parameters']
         for idx, val in enumerate(data['ng_avg']):
             y.append(idx)
             x.append(val)
@@ -162,33 +167,39 @@ class PerformancePlotExclusion():
         self.fontname = "Trebuchet MS"
         
         self.get_goldschmidt_data()  # goldschmidt reference
-        self.get_data(0, "best GA", "dodgerblue", pos="right", crit="all")  # best
-        self.get_data_exclusion(0, "best GA + chemical", "#00B31B", pos="left", crit="all")  # best
+        self.get_data(0, "best GA", "dodgerblue", pos="left", crit="mixed")  # best
+        self.get_data_exclusion(0, "best GA +\nchemical ", "#00B31B", pos="right", crit="all")  # best
+        self.get_reference_data()  # reference
         
         plt.xlabel("Average number of calculations", fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylabel("Potential solar light splitting materials", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Potential solar water splitting materials", fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_xticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.setp(plt.gca().get_yticklabels(), fontname=self.fontname, fontsize=self.fontsize)
         plt.ylim((0, len(GOOD_CANDS_LS) + 0.5))
-        plt.xlim((0, 5500))
+        plt.xlim((0, 4500))
         
         if format:
             plt.savefig("performance_plot_exclusion."+format)
         else:
             plt.show()
+    
+    def get_reference_data(self):
+        x = [0, get_reference_array()[len(GOOD_CANDS_LS)]]
+        y = [0, len(GOOD_CANDS_LS)]
+        plt.errorbar(x, y, lw=self.lw, color="black")
+        plt.annotate("random", xy = (x[1] * 0.15, y[1] * 0.15), xytext = (-5, 5), color="black", textcoords = 'offset points', ha = 'right', va = 'bottom', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
     def get_data(self, idx, label, color, pos="left", crit="all"):
         x = []
         y = []
         xerr = []
-        data = self.stats_process.find({}, sort = [(crit, pymongo.ASCENDING)])[(int)(idx)]
+        data = self.stats_process.find({"all":{"$lte":3277}}, sort = [("ten", pymongo.ASCENDING)])[(int)(idx)]
         for idx, val in enumerate(data['ng_avg']):
             y.append(idx)
             x.append(val)
             xerr.append(data['ng_stdev'][idx])
-        ha, va, xytext = "right", "bottom", (-5, 5)
-        
-        if pos == "right":
+
+        if pos == "left":
             ha, va, xytext = "left", "bottom", (25, 5)
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
@@ -203,19 +214,18 @@ class PerformancePlotExclusion():
             y.append(idx)
             x.append(val)
             xerr.append(data['ng_stdev'][idx])
-        ha, va, xytext = "right", "bottom", (-10, 5)
         
         if pos == "right":
-            ha, va, xytext = "left", "bottom", (25, 5)
+            ha, va, xytext = "right", "top", (-30, -3)
             
         plt.errorbar(x, y, xerr=xerr, lw = self.lw, markersize=9, elinewidth=1, ecolor="black", marker="o", capsize=3, color=color, barsabove=True)
-        plt.annotate(label, xy = (x[(int)(len(GOOD_CANDS_LS)*19/20)], y[(int)(len(GOOD_CANDS_LS)*19/20)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate(label, xy = (x[(int)(len(GOOD_CANDS_LS)*9/10)], y[(int)(len(GOOD_CANDS_LS)*9/10)]), xytext = xytext, color=color, textcoords = 'offset points', ha = ha, va = va, fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
         
     def get_goldschmidt_data(self):
         color = "tomato"
         y, x = ranked_list_optimization.get_stats(get_ranked_list_goldschmidt_halffill())
         plt.errorbar(x, y, lw=self.lw, color=color)
-        plt.annotate("chemical", xy = (x[19], y[19]), xytext = (10, 15), color=color, textcoords = 'offset points', ha = 'right', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
+        plt.annotate("chemical", xy = (x[19], y[19]), xytext = (5, 0), color=color, textcoords = 'offset points', ha = 'left', va = 'top', fontname=self.fontname, fontsize=self.fontsize, arrowprops = None)
     
 class ComparisonPlot():
 
@@ -458,8 +468,8 @@ class TenAllPlot():
         
         self.get_data()
         
-        plt.xlabel("Efficiency (10 materials)", fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylabel("Efficiency (all 20 materials)", fontname=self.fontname, fontsize=self.fontsize)
+        plt.xlabel("Efficiency (10 solutions)", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Efficiency (all 20 solutions)", fontname=self.fontname, fontsize=self.fontsize)
         
         if format:
             plt.savefig("tenall_plot."+format)
@@ -477,25 +487,24 @@ class TenAllPlot():
             for data in self.stats_process.find({"parameters.popsize":popsize}):
                 x.append(get_reference_array()[10]/data['ten'])
                 y.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
-            plt.scatter(x, y, c=[colors[popsize]]*len(x), marker=markers[popsize], s=30, label="popsize="+str(popsize))
+            plt.scatter(x, y, c=[colors[popsize]]*len(x), marker=markers[popsize], s=25, label="popsize="+str(popsize))
         
         plt.legend(loc=4)
         yxis = plt.ylim()
-        plt.ylim(0.75, yxis[1])
+        plt.ylim(0.75, 6.5)
         xxis = plt.xlim()
-        plt.xlim(0.75, xxis[1])
+        plt.xlim(0.75, 11.5)
         plt.xticks(np.arange(1,plt.xlim()[1], 1))
         plt.yticks(np.arange(1,plt.ylim()[1], 1))
         
-        plt.annotate("best GA", xy= (9.5, 4.2), xytext=(9, 4.3), arrowprops={"arrowstyle":"->", "connectionstyle":"arc"})
+        plt.annotate("best GA", xy= (9.9, 5.82), xytext=(10, 6), arrowprops={"arrowstyle":"->", "connectionstyle":"arc"})
 
 class LSOSPlot():
 
-    def __init__(self, format=None):
-        plt.figure(1, figsize=(8,6))
+    def __init__(self, format=None, crit="all"):
         self.db = Stats_Database()
         self.stats_process = self.db._stats_process
-        
+        self.crit = crit
         self.db_os = Stats_Database(extension="_OS")
         self.stats_process_os = self.db_os._stats_process
         
@@ -506,30 +515,54 @@ class LSOSPlot():
         
         self.get_data()
         
-        plt.xlabel("Efficiency (one-photon light splitters)", fontname=self.fontname, fontsize=self.fontsize)
-        plt.ylabel("Efficiency (photoanode oxide shields)", fontname=self.fontname, fontsize=self.fontsize)
+        plt.xlabel("Efficiency (one-photon water splitters, "+crit+")", fontname=self.fontname, fontsize=self.fontsize)
+        plt.ylabel("Efficiency (transparent shields, "+crit+")", fontname=self.fontname, fontsize=self.fontsize)
         
         if format:
-            plt.savefig("lsos_plot."+format)
+            plt.savefig("lsos_plot_"+crit+"."+format)
         else:
             plt.show()
     
     def get_data(self):
-        x = []
-        y = []
-        for data in self.stats_process.find({}):
-            unique_key = data['unique_key']
-            unique_key = unique_key.replace("eval_fitness_complex", "eval_fitness_complex_oxide_shield")
-            unique_key = unique_key.replace("eval_fitness_simple", "eval_fitness_simple_oxide_shield")
-            data2 = self.stats_process_os.find_one({"unique_key":unique_key})
-            
-            x.append(get_reference_array()[len(GOOD_CANDS_LS)]/data['all'])
-            y.append(get_reference_array_OS()[len(GOOD_CANDS_OS)]/data2['all'])
-        plt.scatter(x, y, c="dodgerblue", s=30)
+        
+        colors = {"eval_fitness_simple": "dodgerblue", "eval_fitness_complex": "dodgerblue", "eval_fitness_complex_product": "dodgerblue"}
+        markers = {"eval_fitness_simple": "o", "eval_fitness_complex": "o", "eval_fitness_complex_product": "o"}
+        #colors = {"eval_fitness_simple": "tomato", "eval_fitness_complex": "dodgerblue", "eval_fitness_complex_product": "springgreen"}
+        #markers = {"eval_fitness_simple": "s", "eval_fitness_complex": "o", "eval_fitness_complex_product": "D"}
+        
+        for ff in colors:
+            x = []
+            y = []
+            for data in self.stats_process.find({"parameters.fitness_fnc":ff}):
+                unique_key = data['unique_key']
+                if "eval_fitness_complex_product" in unique_key:
+                    unique_key = unique_key.replace("eval_fitness_complex_product", "eval_fitness_complex_product_oxide_shield")
+                else:
+                    unique_key = unique_key.replace("eval_fitness_complex", "eval_fitness_complex_oxide_shield")
+                    unique_key = unique_key.replace("eval_fitness_simple", "eval_fitness_simple_oxide_shield")
+                
+                data2 = self.stats_process_os.find_one({"unique_key":unique_key})
+                
+                m_idx = len(GOOD_CANDS_LS)
+                m_idx_OS = len(GOOD_CANDS_OS)
+                
+                if self.crit == "half":
+                    m_idx = int(len(GOOD_CANDS_LS)/2)
+                    m_idx_OS = int(len(GOOD_CANDS_OS)/2)
+                
+                x.append(get_reference_array()[m_idx]/data[self.crit])
+                y.append(get_reference_array_OS()[m_idx_OS]/data2[self.crit])
+            plt.scatter(x, y, c=[colors[ff]]*len(x), marker=markers[ff], s=25, label=get_pretty_name(ff))
+        
+        #plt.legend(loc=4)    
         yxis = plt.ylim()
-        plt.ylim(0.75, yxis[1])
+        
+        topy = 10 if self.crit == "half" else 9
+        topx = 11.5 if self.crit == "half" else 7
+        
+        plt.ylim(0.75, topy)
         xxis = plt.xlim()
-        plt.xlim(0.75, xxis[1])
+        plt.xlim(0.75, topx)
         plt.xticks(np.arange(1,plt.xlim()[1], 1))
         plt.yticks(np.arange(1,plt.ylim()[1], 1))
 
@@ -547,30 +580,35 @@ class DataTable():
             print ("{}\t{}\t{}\t{}\t{}\t{}\t{}").format(p['popsize'], get_pretty_name(p['selection_fnc']), get_pretty_name(p['fitness_fnc']),get_pretty_name(p['crossover_fnc']), p['elitism_num'], it['ten'], it['all'])
     
 if __name__ == "__main__":
-    format = None
+    format = "png"
 
-    #print get_reference_array()[10]/9.5
-    #print get_reference_array()[20]/3671
+    
+    print get_reference_array()[20]
+    print get_reference_array()[20]/1547.35
+    print get_reference_array()[10]/532.05
+    
     
     if format:
         mpl.rcParams['savefig.dpi'] = 160
-        #LSOSPlot(format=format)
-        HeatMapPlot(format=format)
+        #LSOSPlot(format=format, crit="all")
+        #HeatMapPlot(format=format)
         #BreakoutPlot(format=format)
         #PerformancePlot(format=format)
         #ComparisonPlot(format=format)
         #ParametersPlot(format=format)
-        #PerformancePlotExclusion(format=format)
+        PerformancePlotExclusion(format=format)
         #TenAllPlot(format=format)
     
     else:
-        #LSOSPlot()
+        
+        #LSOSPlot(crit="all")
         #TenAllPlot()
         #PerformancePlot()
-        #PerformancePlotExclusion()
+        PerformancePlotExclusion()
         #ComparisonPlot()
         #ParametersPlot()
         #BreakoutPlot()
-        HeatMapPlot()
+        #HeatMapPlot()
+        print 'yay'
     
     # DataTable()

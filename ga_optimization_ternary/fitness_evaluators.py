@@ -46,7 +46,12 @@ class FitnessEvaluator():
             if genome in self._exclusions:
                 return 0
             return eval_fitness_complex(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)     
-            
+
+        if self._fitness.__name__ == "eval_fitness_complex_product_exclusion":
+            if genome in self._exclusions:
+                return 0
+            return eval_fitness_complex_product(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)   
+                    
         raw_fit = self._fitness(gap_dir, gap_ind, heat, vb_dir, cb_dir, vb_ind, cb_ind)
         # scaled_fit = math.exp(raw_fit/self._temp)
         return raw_fit
