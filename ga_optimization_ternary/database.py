@@ -54,9 +54,12 @@ class M_Database():
         return self._all_data[A][B][anion_idx]
     
 
+import os
+LOCAL_MONGO_PORT = int(os.environ.get('LOCAL_MONGO_PORT', 27017))
+
 class Stats_Database():
     def __init__(self, clear=False, extension=""):
-        connection = pymongo.Connection('localhost', 12345)
+        connection = pymongo.Connection('localhost', LOCAL_MONGO_PORT)
         self._stats_raw = connection.unc["stats_raw" + extension]
         self._stats_process = connection.unc["stats_process" + extension]
         if clear:
