@@ -23,7 +23,7 @@ from collections import OrderedDict
 from ga_optimization_ternary.database import GOOD_CANDS_LS,\
     InitializationDB, GOOD_CANDS_OS
 from ga_optimization_ternary.ranked_list_optimization import get_excluded_list
-    
+
 __author__ = "Anubhav Jain"
 __copyright__ = "Copyright 2012, The Materials Project"
 __version__ = "0.1"
@@ -54,7 +54,7 @@ def transform_list(my_list):
     t2 = [fe.convert_Z_to_raw(x) for x in t1]
     return [[a[0], a[2], a[1]] for a in t2]
 """
-    
+
 class AllFound():
     ALL_FOUND = False
 
@@ -65,7 +65,7 @@ def AllFoundCriteria(ga_engine):
     return AllFound.ALL_FOUND
 
 class ParameterSet():
-    
+
     def __init__(self, crossover_fnc, fitness_fnc, fitness_temp, selection_fnc, tournament_rate, mutation_fnc, mutation_rate, initialization_fnc, popsize, elitism_num, niching_bool, initialization, include_ridiculous=True):
         self.crossover_fnc = crossover_fnc
         self.fitness_fnc = fitness_fnc
@@ -80,7 +80,7 @@ class ParameterSet():
         self.elitism_num = elitism_num
         self.niching_bool = niching_bool
         self.include_ridiculous = include_ridiculous
-        
+
     def to_dict(self):
         d = OrderedDict()
         d['crossover_fnc'] = self.crossover_fnc.__name__
@@ -98,13 +98,13 @@ class ParameterSet():
         d['niching'] = self.niching_bool
         d['include_ridiculous'] = self.include_ridiculous
         return d
-    
+
     def unique_key(self):
         return '-'.join([str(val) for val in self.to_dict().values()])
 
 
 class StatTrack():
-    
+
     def __init__(self, fe, mutation_rate, tournament_rate, include_ridiculous=True, application="LS"):
         self._candidates_tried = set()
         self._candidates_tried_all = set()
@@ -120,15 +120,15 @@ class StatTrack():
         self.excluded_list = get_excluded_list()
         self.good_list = GOOD_CANDS_LS if application == "LS" else GOOD_CANDS_OS
         self.good_attempts = {}
-    
+
     def updateStats(self, generation_num, population):
         for i in population:
             cand = self._fitness_evaluator.convert_raw_to_Z((i[0], i[1], i[2]))
             if self.include_ridiculous or cand not in self.excluded_list:
                 self._candidates_tried.add(cand)
-            
+
             self._candidates_tried_all.add(cand)
-                
+
             if cand in self.good_list:
                 self._candidates_good.add(cand)
                 anion_dict = {}
@@ -139,32 +139,32 @@ class StatTrack():
                 anion_dict[4] = "O2F"
                 anion_dict[5] = "OFN"
                 anion_dict[6] = "O2S"
-                
+
                 anion = anion_dict[cand[2]]
                 a = Element.from_Z(cand[0]).symbol
                 b = Element.from_Z(cand[1]).symbol
                 form_key = a + b + anion
                 if form_key not in self.good_attempts:
                     self.good_attempts[form_key] = len(self._candidates_tried)
-                
+
         self.generation_ncandidates.append(len(self._candidates_tried))
         self.generation_ncandidates_all.append(len(self._candidates_tried_all))
-        
+
         self.generation_ngood.append(len(self._candidates_good))
-        
+
         if len(self._candidates_good) == len(self.good_list):
             AllFound.ALL_FOUND = True
-        
+
         return self.generation_ncandidates_all[-1] - self.generation_ncandidates_all[-2]
-        
+
     def evolve_callback(self, ga):
-        if self.tournament_rate != 2: 
+        if self.tournament_rate != 2:
             ga.getPopulation().setParams(tournamentPool=(int)(math.ceil(self.tournament_rate * len(ga.getPopulation()))))
         else:
             ga.getPopulation().setParams(tournamentPool=2)
-        
+
         cands_added = self.updateStats(ga.currentGeneration, ga.getPopulation().internalPop)
-        
+
         if cands_added == 0:
             ga.setMutationRate(0.4)
             ga.setCrossoverRate(1.0)
@@ -172,10 +172,10 @@ class StatTrack():
         else:
             ga.setMutationRate(self.mutation_rate)
             ga.setCrossoverRate(0.9)
-            
+
         return False
-        
-    
+
+
 def run_simulation(pset, max_generations, initial_list=None):
     # Genome instance
     setOfAlleles = GAllele.GAlleles()
@@ -186,35 +186,35 @@ def run_simulation(pset, max_generations, initial_list=None):
     # Genome instance, 1D List of 50 elements
     genome = G1DList.G1DList(3)
     genome.setParams(allele=setOfAlleles)
-    
+
     #Fitness function
-    
+
     fe = FitnessEvaluator(pset.fitness_fnc, pset.fitness_temp)
     Consts.CDefScaleLinearMultiplier = pset.fitness_temp
-    
+
     application = "OS" if "oxide" in pset.fitness_fnc.__name__ else "LS"
-    
+
     st = StatTrack(fe, pset.mutation_rate, pset.tournament_rate, include_ridiculous=pset.include_ridiculous, application=application)
-    
+
     genome.crossover.set(pset.crossover_fnc)
     genome.mutator.set(pset.mutation_fnc)
     genome.evaluator.set(fe.array_to_score)
     genome.initializator.set(pset.initialization_fnc)
 
     ga = GSimpleGA.GSimpleGA(genome)
-    
+
     ga.selector.set(pset.selection_fnc)
     ga.terminationCriteria.set(AllFoundCriteria)
     ga.stepCallback.set(st.evolve_callback)
     ga.setPopulationSize(pset.popsize)
     ga.setGenerations(max_generations)
-    
+
     if pset.elitism_num > 0:
         ga.setElitism(True)
         ga.setElitismReplacement((int)(math.ceil(pset.elitism_num * pset.popsize)))
     else:
         ga.setElitism(False)
-    
+
     ga.setMutationRate(pset.mutation_rate)
     # TODO: figure out niching
     stats_freq = 0
@@ -428,7 +428,7 @@ def process_parameterset(ps):
                 iteration += 1
         else:
             print 'SKIPPING KEY' + ps.unique_key()
-    
+
     return 0
 
 
