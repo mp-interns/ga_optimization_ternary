@@ -42,7 +42,9 @@ from database import Stats_Database
 import multiprocessing
 import math
 
-
+# To kill all processes:
+# $ kill -9 `ps -ef | grep simple_ga.py | grep -v grep | awk '{print $2}'`
+PROCESS_PARALLEL = True;
 NUM_ITERATIONS = 20
 
 """
@@ -261,8 +263,10 @@ def main_loop():
                                                                     print "We already have pset:", ps.unique_key()
 
     print 'the number of parameter sets is', len(all_ps)
-    process_parallel(all_ps, ncores)
-    #process_serial(all_ps)
+    if PROCESS_PARALLEL:
+        process_parallel(all_ps, ncores)
+    else:
+        process_serial(all_ps)
 
 def main_test():
     ncores = 1
@@ -305,8 +309,10 @@ def main_test():
                                                                     print "We already have pset:", ps.unique_key()
 
     print 'the number of parameter sets is', len(all_ps)
-    process_parallel(all_ps, ncores)
-    #process_serial(all_ps)
+    if PROCESS_PARALLEL:
+        process_parallel(all_ps, ncores)
+    else:
+        process_serial(all_ps)
 
 def main_loop_OS():
     ncores = 7
@@ -349,11 +355,13 @@ def main_loop_OS():
                                                                     print "We already have pset:", ps.unique_key()
 
     print 'the number of parameter sets is', len(all_ps)
-    process_parallel(all_ps, ncores)
-    #process_serial(all_ps)
+    if PROCESS_PARALLEL:
+        process_parallel(all_ps, ncores)
+    else:
+        process_serial(all_ps)
 
 def main_loop_exclusions():
-    ncores = 4
+    ncores = 8
     clear = False
     # clear the Stats DB
     db = Stats_Database(clear=clear, extension="_exclusion")
@@ -393,8 +401,10 @@ def main_loop_exclusions():
                                                                     print "We already have pset:", ps.unique_key()
 
     print 'the number of parameter sets is', len(all_ps)
-    #process_serial(all_ps)
-    process_parallel(all_ps, ncores)
+    if PROCESS_PARALLEL:
+        process_parallel(all_ps, ncores)
+    else:
+        process_serial(all_ps)
 
 
 def process_parameterset(ps):
