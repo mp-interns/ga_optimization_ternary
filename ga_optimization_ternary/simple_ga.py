@@ -6,11 +6,11 @@ Created on Mar 14, 2012
 '''
 from pymatgen.core.periodic_table import Element
 
-"""
+
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(filename='simple_ga.log',level=logging.DEBUG)
 logging.warning('Logging enabled')
-"""
+
 
 from ga_optimization_ternary.fitness_evaluators import eval_fitness_simple, eval_fitness_complex,\
     eval_fitness_simple_exclusion, eval_fitness_complex_exclusion,\
