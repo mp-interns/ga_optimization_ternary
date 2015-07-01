@@ -15,3 +15,5 @@ data/*
 ga_optimization_ternary/fitness_evaluators.pyc
 .idea
 db_setup/*_data
+*.log
+TAGS
