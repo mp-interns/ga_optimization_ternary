@@ -218,8 +218,8 @@ def run_simulation(pset, max_generations, initial_list=None):
     ga.setMutationRate(pset.mutation_rate)
     # TODO: figure out niching
     stats_freq = 0
-    ga.evolve(freq_stats=stats_freq, initial_list=initial_list)
-    
+    ga.evolve(freq_stats=stats_freq)
+
     return st
 
 def main_loop():
