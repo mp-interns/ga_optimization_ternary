@@ -4,6 +4,8 @@ from __future__ import division
 '''
 Created on Mar 14, 2012
 '''
+# XXX may need to downgrade to pymatgen 1.x (2.x introduced July 2012).
+# Last commit from Anubhav was 2012-11-29, so could have used v2.3.0 at latest.
 from pymatgen.core.periodic_table import Element
 
 
